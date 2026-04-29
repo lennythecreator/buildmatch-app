@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+@theme {
+  --color-primary: hsl(210 100% 15%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  
+  --color-secondary: hsl(142 76% 36%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  
+  --color-accent: hsl(210 100% 15%);
+  --color-accent-foreground: hsl(0 0% 100%);
+
+  --color-background: hsl(0 0% 98%);
+  --color-foreground: hsl(240 10% 4%);
+  
+  --color-surface: hsl(0 0% 100%);
+  --color-border: hsl(240 5% 84%);
+  --color-danger: hsl(0 84% 60%);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
