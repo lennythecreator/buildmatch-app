@@ -1,50 +1,119 @@
-# Welcome to your Expo app 👋
+# BuildMatch
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+BuildMatch is an Expo React Native marketplace for renovation projects. It connects real estate developers with contractors for project discovery, bidding, matching, payments, and dispute handling.
 
-## Get started
+## Product Context
 
-1. Install dependencies
+BuildMatch is designed around two primary user roles:
 
-   ```bash
-   npm install
-   ```
+- Developers post renovation jobs, review bids, select contractors, and manage milestone-based work.
+- Contractors browse available jobs, submit bids, get matched, and track active work.
 
-2. Start the app
+Core flows represented in this repo include:
 
-   ```bash
-   npx expo start
-   ```
+- Authentication and onboarding
+- Developer and contractor dashboard experiences
+- Job discovery and job detail views
+- Bid and active-project surfaces
+- Profile management
+- API service and hook scaffolding for backend integration
 
-In the output, you'll find options to open the app in a
+## Tech Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Expo + React Native
+- Expo Router
+- TypeScript
+- TanStack Query
+- Zustand
+- React Hook Form
+- Uniwind / Tailwind CSS v4
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Getting Started
 
-## Get a fresh project
+### Prerequisites
 
-When you're ready, run:
+- Node.js 18+
+- npm
+- Expo-compatible iOS simulator, Android emulator, or Expo Go
+
+### Install dependencies
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Configure environment
 
-## Learn more
+Copy the example env file and update the API URL if needed:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+cp .env.example .env
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Current required public variable:
 
-## Join the community
+```bash
+EXPO_PUBLIC_API_URL=http://localhost:3001
+```
 
-Join our community of developers creating universal apps.
+### Run the app
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm start
+```
+
+Platform-specific commands:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+## Available Scripts
+
+```bash
+npm start
+npm run android
+npm run ios
+npm run web
+npm run lint
+npm run type-check
+```
+
+## Project Structure
+
+```text
+app/                 Expo Router screens and layouts
+components/          Reusable feature and UI components
+components/ui/       Base UI primitives
+data/                Mock data used by screens and flows
+docs/                Setup and API integration docs
+hooks/               App hooks and query integrations
+lib/api/             API client, service modules, and shared API types
+planning/            Product and implementation planning artifacts
+screenshots/         Product screenshots and reference images
+store/               Zustand stores
+types/               Shared TypeScript domain types
+```
+
+## Environment and API
+
+The app reads its backend URL from `EXPO_PUBLIC_API_URL`.
+
+- Use `.env.example` as the onboarding template.
+- Environment setup details live in [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md).
+- API integration details live in [docs/api-integration.md](docs/api-integration.md).
+
+## Documentation
+
+- [docs/README.md](docs/README.md)
+- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+- [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md)
+- [docs/api.md](docs/api.md)
+- [docs/api-integration.md](docs/api-integration.md)
+
+## Notes
+
+- This repository has moved beyond the default Expo starter and contains product-specific routes, components, docs, and planning assets for BuildMatch.
+- Run `npm run lint` before opening a pull request.
