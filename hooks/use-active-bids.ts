@@ -1,51 +1,41 @@
-import { mockBids } from '@/data/mock-bids';
-import { Bid } from '@/types/bid';
-import { useEffect, useState } from 'react';
+import { bidService, jobService } from '@/lib/api/services';
+import type { Bid } from '@/lib/api/types';
+import { useAuthStore } from '@/store/auth';
+import { useQuery } from '@tanstack/react-query';
+
+type BidWithJob = Omit<Bid, 'job'> & {
+  job: NonNullable<Bid['job']>;
+};
 
 export function useActiveBids(contractorId?: string) {
-  const [bids, setBids] = useState<Bid[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoadingAuth = useAuthStore((state) => state.isLoading);
 
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchBids = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        if (!isMounted) return;
-        
-        // Active bids are those that are still pending or have been accepted
-        // (but presumably haven't finished). 
-        const activeBids = mockBids.filter(bid => {
-          const isUserMatch = contractorId ? bid.contractorId === contractorId : true;
-          const isActive = bid.status === 'PENDING' || bid.status === 'ACCEPTED';
-          return isUserMatch && isActive;
-        });
+  return useQuery<BidWithJob[], Error>({
+    queryKey: ['contractor', 'bids', contractorId ?? 'me'],
+    enabled: isAuthenticated && !isLoadingAuth,
+    queryFn: async () => {
+      const jobsResponse = await jobService.getMyBids();
+      const jobs = jobsResponse.jobs ?? [];
 
-        setBids(activeBids);
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Failed to fetch active bids'));
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
+      const resolvedBids: Array<BidWithJob | null> = await Promise.all(
+        jobs.map(async (job) => {
+          const bid = await bidService.getMyBid(job.id);
 
-    fetchBids();
+          if (contractorId && bid.contractorId !== contractorId) {
+            return null;
+          }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [contractorId]);
+          return {
+            ...bid,
+            job: bid.job ?? job,
+          };
+        })
+      );
 
-  return { bids, isLoading, error };
+      return resolvedBids
+        .filter((bid): bid is BidWithJob => bid !== null)
+        .sort((left: BidWithJob, right: BidWithJob) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+    },
+  });
 }

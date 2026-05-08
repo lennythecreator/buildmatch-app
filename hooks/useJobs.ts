@@ -1,6 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobService } from '@/lib/api/services';
-import type { Job, JobFilters, CreateJobInput } from '@/lib/api/types';
+import type { CreateJobInput, JobFilters } from '@/lib/api/types';
+import { useAuthStore } from '@/store/auth';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const JOB_QUERY_KEY = ['jobs'] as const;
 
@@ -20,9 +21,13 @@ export function useJob(id: string) {
 }
 
 export function useMyJobs() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
   return useQuery({
     queryKey: [...JOB_QUERY_KEY, 'my-jobs'],
     queryFn: () => jobService.getMyJobs(),
+    enabled: isAuthenticated && !isLoading,
   });
 }
 

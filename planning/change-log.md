@@ -14,6 +14,20 @@ Track all modifications to prevent repeating mistakes and building on solid foun
 
 ## Recent Changes
 
+### 2026-05-08
+- **Type**: Feature
+- **Component**: Contractor Dashboard
+- **Change**: Built out the contractor dashboard with active bids, reliability score, and monthly performance widgets; added supporting `My Bids` and `Find Jobs` screens.
+- **Why**: The contractor dashboard spec required a real overview surface with bid review, score visibility, and quick access to job discovery.
+- **Issues**: The new `Find Jobs` screen needed an API-to-local job type adapter so it could render with the existing job card component.
+
+### 2026-05-08
+- **Type**: Refactor
+- **Component**: Contractor Dashboard Data
+- **Change**: Replaced the mock active-bids and performance data sources with API-backed queries derived from the contractor's jobs and own bid records.
+- **Why**: The dashboard widgets needed to reflect live contractor activity instead of seeded mock data.
+- **Issues**: `GET /api/jobs/my-bids` returns jobs, so the bid hook now resolves each job's own bid before rendering.
+
 ### 2026-04-13
 - **Type**: Setup
 - **Component**: Project Infrastructure

@@ -1,13 +1,51 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { bidService } from '@/lib/api/services';
-import type { CreateBidInput } from '@/lib/api/types';
+import type { Bid, BidListResponse, CreateBidInput } from '@/lib/api/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const BID_QUERY_KEY = ['bids'] as const;
+
+function normalizeBidListResponse(response: BidListResponse | Bid[]): BidListResponse {
+  if (Array.isArray(response)) {
+    return {
+      bids: response,
+      total: response.length,
+      page: 1,
+      limit: response.length,
+    };
+  }
+
+  return response;
+}
 
 export function useBids(jobId: string) {
   return useQuery({
     queryKey: [...BID_QUERY_KEY, 'job', jobId],
-    queryFn: () => bidService.list(jobId),
+    queryFn: async () => {
+      if (__DEV__) {
+        console.log('[bids] fetching bids', { jobId });
+      }
+
+      try {
+        const response = await bidService.list(jobId);
+        const normalizedResponse = normalizeBidListResponse(response);
+
+        if (__DEV__) {
+          console.log('[bids] fetch success', {
+            jobId,
+            count: normalizedResponse.bids.length,
+            response: normalizedResponse,
+          });
+        }
+
+        return normalizedResponse;
+      } catch (error) {
+        if (__DEV__) {
+          console.error('[bids] fetch failed', { jobId, error });
+        }
+
+        throw error;
+      }
+    },
     enabled: !!jobId,
   });
 }

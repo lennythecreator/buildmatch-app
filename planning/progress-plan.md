@@ -19,24 +19,23 @@ Keeps work items small and sequential to prevent agent drift, context overflow, 
 - [ ] **NEXT**: Environment setup (dev, staging, prod configs)
 
 ### Tier 2: Authentication & Onboarding (Current Focus)
-- [ ] User profile schema and types (Zod)
-- [ ] Developer signup flow
-- [ ] Contractor signup flow
-- [ ] Profile completion modal
+- [x] User profile schema and types (Zod)
+- [x] Developer signup flow
+- [x] Contractor signup flow
 - [ ] Rate limiting on auth endpoints
 
 ### Tier 3: Job Posting & Browsing
 - [ ] Job schema and types
-- [ ] Developer job posting form
-- [ ] Job listing display
-- [ ] Search and filtering
+- [x] Developer job posting form
+- [x] Job listing display
+- [x] Search and filtering
 - [ ] Pagination
 
 ### Tier 4: Bidding System
-- [ ] Bid schema and types
+- [x] Bid schema and types
 - [ ] Contractor bid submission
-- [ ] Developer bid review
-- [ ] Bid acceptance logic
+- [x] Developer bid review
+- [x] Bid acceptance logic
 - [ ] Match confirmation
 
 ### Tier 5: Payments & Escrow
@@ -68,6 +67,26 @@ Keeps work items small and sequential to prevent agent drift, context overflow, 
 - [ ] Badge system
 
 ## Current Sprint Tasks
+
+### Task 0: Contractor Dashboard
+**Status**: Complete
+**Size**: 2-4 hours
+**Goal**: Build out the contractor dashboard experience and wire it to live data
+**Steps**:
+1. Add active bids, reliability score, and monthly performance widgets
+2. Wire the widgets to live contractor bid and AI reliability queries
+3. Add contractor bid review and job discovery screens
+4. Validate the slice with type-check and lint
+
+**Acceptance Criteria**:
+- [x] Dashboard shows live contractor activity
+- [x] Active bids are limited to the top three items
+- [x] Reliability score and performance widgets are displayed
+- [x] Supporting review-more and find-job flows exist
+- [x] Type-check passes
+- [x] Lint passes with only unrelated warnings
+
+---
 
 ### Task 1: Environment Configuration
 **Status**: Ready to start  
@@ -111,10 +130,9 @@ Keeps work items small and sequential to prevent agent drift, context overflow, 
 **Goal**: Build developer account creation screen  
 **Implementation Plan**:
 1. Create `app/auth/developer-signup.tsx`
-2. Use HeroUI Native form components
-3. Implement validation using user schema
-4. Add error handling and feedback
-5. Wire up to mock auth API
+2. Implement validation using user schema
+3. Add error handling and feedback
+4. Wire up to mock auth API
 
 **Acceptance Criteria**:
 - [ ] Form renders
@@ -145,4 +163,4 @@ Keeps work items small and sequential to prevent agent drift, context overflow, 
 
 ---
 
-Last Updated: 2026-04-13
+Last Updated: 2026-05-08

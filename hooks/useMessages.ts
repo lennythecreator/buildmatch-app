@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messageService } from '@/lib/api/services';
 import type { CreateMessageInput } from '@/lib/api/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const MESSAGE_QUERY_KEY = ['messages'] as const;
 
@@ -8,6 +8,7 @@ export function useConversations() {
   return useQuery({
     queryKey: [...MESSAGE_QUERY_KEY, 'conversations'],
     queryFn: () => messageService.listConversations(),
+    refetchInterval: 15000,
   });
 }
 
@@ -32,6 +33,7 @@ export function useMessages(conversationId: string, params?: { before?: string; 
     queryKey: [...MESSAGE_QUERY_KEY, 'conversation', conversationId, 'messages', params],
     queryFn: () => messageService.getMessages(conversationId, params),
     enabled: !!conversationId,
+    refetchInterval: 10000,
   });
 }
 

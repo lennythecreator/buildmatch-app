@@ -8,6 +8,9 @@ export function useContractors(filters?: ContractorFilters) {
   return useQuery({
     queryKey: [...CONTRACTOR_QUERY_KEY, 'list', filters],
     queryFn: () => contractorService.list(filters),
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
   });
 }
 
@@ -16,6 +19,8 @@ export function useContractor(id: string) {
     queryKey: [...CONTRACTOR_QUERY_KEY, 'detail', id],
     queryFn: () => contractorService.get(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
   });
 }
 

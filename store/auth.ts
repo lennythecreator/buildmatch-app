@@ -1,7 +1,8 @@
+import { tokenStorage } from '@/lib/api/token-storage';
+import type { User, UserRoleType } from '@/lib/api/types';
+import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import * as SecureStore from 'expo-secure-store';
-import type { User, UserRoleType } from '@/lib/api/types';
 
 const TOKEN_KEY = 'auth_token';
 
@@ -33,6 +34,7 @@ export interface AuthState {
   setLoading: (isLoading: boolean) => void;
   setError: (hasError: boolean, message?: string) => void;
   clearAuth: () => void;
+  bootstrapAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -41,7 +43,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
       hasError: false,
       error: null,
 
@@ -54,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (user: User, token: string) => {
         await SecureStore.setItemAsync(TOKEN_KEY, token);
-        set({ user, token, isAuthenticated: true, hasError: false, error: null });
+        set({ user, token, isAuthenticated: true, isLoading: false, hasError: false, error: null });
       },
 
       logout: async () => {
@@ -63,6 +65,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
           hasError: false,
           error: null,
         });
@@ -77,9 +80,28 @@ export const useAuthStore = create<AuthState>()(
         user: null,
         token: null,
         isAuthenticated: false,
+        isLoading: false,
         hasError: false,
         error: null,
       }),
+
+      bootstrapAuth: async () => {
+        const token = await tokenStorage.get();
+
+        if (token) {
+          set({ token, isAuthenticated: true, isLoading: false });
+          return;
+        }
+
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          hasError: false,
+          error: null,
+        });
+      },
     }),
     {
       name: 'auth-storage',

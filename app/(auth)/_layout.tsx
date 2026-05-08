@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '@/store/auth';
+import { Redirect, Stack } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function AuthLayout() {
   const { isLoading, isAuthenticated } = useAuthStore();
@@ -14,7 +14,7 @@ export default function AuthLayout() {
   }
 
   if (isAuthenticated) {
-    return null;
+    return <Redirect href="/(tabs)/dashboard" />;
   }
 
   return (

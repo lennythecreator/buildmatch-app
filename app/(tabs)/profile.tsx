@@ -2,23 +2,26 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileSection } from '@/components/profile/ProfileSection';
 import { QuickLinks } from '@/components/profile/QuickLinks';
 import { Button } from '@/components/ui/button';
-import { useCurrentUser } from '@/hooks/useAuth';
+import { Card } from '@/components/ui/card';
+import { useCurrentUser, useLogout } from '@/hooks/useAuth';
+import { ApiError } from '@/lib/api/client';
 import { useAuthStore } from '@/store/auth';
 import { IconBriefcase, IconUser, IconVideo } from '@tabler/icons-react-native';
-import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { ActivityIndicator, Alert, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
-  const { data: user, isLoading } = useCurrentUser();
-  const logoutAction = useAuthStore((state) => state.logout);
-  const queryClient = useQueryClient();
+  const { data: remoteUser, isLoading, isError, error } = useCurrentUser();
+  const cachedUser = useAuthStore((state) => state.user);
+  const logoutMutation = useLogout();
   const insets = useSafeAreaInsets();
+  const user = remoteUser ?? cachedUser;
+  const isAuthError = error instanceof ApiError && error.status === 401;
+  const showRecoveryBanner = isError && isAuthError;
 
-  const handleLogout = () => {
-    logoutAction();
-    queryClient.clear();
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
     router.replace('/(auth)/login');
   };
 
@@ -42,7 +45,29 @@ export default function ProfileScreen() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <View
+        className="flex-1 items-center justify-center bg-gray-50 px-6"
+        style={{ paddingTop: insets.top }}
+      >
+        <Text className="text-center text-lg font-bold text-foreground">
+          We could not load your profile.
+        </Text>
+        <Text className="mt-2 text-center text-sm text-gray-500">
+          Your session may have expired. Please log in again to refresh your data.
+        </Text>
+        <Button
+          variant="primary"
+          className="mt-6 w-full"
+          onPress={handleLogout}
+          isLoading={logoutMutation.isPending}
+        >
+          Log in again
+        </Button>
+      </View>
+    );
+  }
 
   const hasBio = Boolean(user.bio?.trim());
   const detailLines = [user.title, user.company, user.website].filter(
@@ -55,6 +80,23 @@ export default function ProfileScreen() {
       className="flex-1 bg-gray-50"
       contentContainerStyle={{ paddingTop: insets.top, padding: 16, paddingBottom: 60 }}
     >
+      {showRecoveryBanner ? (
+        <Card className="mb-4 rounded-2xl border border-danger/20 bg-danger/5 p-4">
+          <Text className="text-base font-bold text-foreground">Session expired</Text>
+          <Text className="mt-1 text-sm leading-5 text-foreground/70">
+            We&apos;re showing cached profile data, but your token is no longer valid. Log in again to refresh everything.
+          </Text>
+          <Button
+            variant="primary"
+            className="mt-4"
+            onPress={handleLogout}
+            isLoading={logoutMutation.isPending}
+          >
+            Log in again
+          </Button>
+        </Card>
+      ) : null}
+
       <ProfileHeader user={user} />
       
       <QuickLinks role={user.role} />

@@ -1,6 +1,7 @@
 import JobCard from "@/components/job-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useCurrentUser } from "@/hooks/useAuth";
 import { useMyJobs } from "@/hooks/useJobs";
 import { useAuthStore } from "@/store/auth";
 import { IconBookmark, IconBriefcase, IconChevronRight } from "@tabler/icons-react-native";
@@ -9,9 +10,11 @@ import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function InvestorDashboard() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuthStore();
+  const { user: storedUser } = useAuthStore();
+  const { data: currentUser } = useCurrentUser();
   const { data: jobsResponse } = useMyJobs();
   const router = useRouter();
+  const user = currentUser ?? storedUser;
   const jobs = Array.isArray(jobsResponse) ? jobsResponse : jobsResponse?.jobs ?? [];
   const recentJobs = [...jobs]
     .sort((leftJob, rightJob) => {

@@ -16,6 +16,8 @@ export const USER_QUERY_KEY = ['user', 'me'] as const;
 
 export function useCurrentUser() {
   const setUser = useAuthStore((state) => state.setUser);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
   return useQuery({
     queryKey: AUTH_QUERY_KEY,
@@ -24,7 +26,7 @@ export function useCurrentUser() {
       setUser(user);
       return user;
     },
-    enabled: useAuthStore((state) => state.isAuthenticated),
+    enabled: isAuthenticated && !isLoading,
     retry: false,
   });
 }

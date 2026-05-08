@@ -1,5 +1,6 @@
 import BidCard from "@/components/bid-card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useBids } from "@/hooks/useBids";
 import { useJob } from "@/hooks/useJobs";
 import {
@@ -9,7 +10,7 @@ import {
   IconHistory,
   IconMapPin
 } from "@tabler/icons-react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
@@ -48,6 +49,7 @@ function formatBidCount(count: number) {
 export default function JobDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const jobId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const router = useRouter();
 
   const { data: job, isLoading: isJobLoading, isError: hasJobError } = useJob(jobId ?? "");
   const {
@@ -57,6 +59,8 @@ export default function JobDetailScreen() {
   } = useBids(jobId ?? "");
 
   const bids = bidsResponse?.bids ?? [];
+  const activeBids = bids.filter((bid) => bid.status !== "WITHDRAWN");
+  const withdrawnBids = bids.filter((bid) => bid.status === "WITHDRAWN");
 
   if (!jobId) {
     return (
@@ -154,11 +158,22 @@ export default function JobDetailScreen() {
         </Text>
       </View>
 
-      {/* Active Bids Section */}
+      {/* Bids Section */}
       <View className="mt-4 gap-6">
-        <Text selectable className="text-[28px] font-extrabold text-slate-900">
-          Active Bids
-        </Text>
+        <View className="flex-row items-center justify-between gap-3">
+          <Text selectable className="text-[28px] font-extrabold text-slate-900">
+            All Bids
+          </Text>
+          {bids.length > 0 ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onPress={() => router.push({ pathname: "/job/[id]/bids", params: { id: jobId } })}
+            >
+              Compare bids
+            </Button>
+          ) : null}
+        </View>
 
         {isBidsLoading ? (
           <View className="items-center justify-center py-8">
@@ -188,10 +203,50 @@ export default function JobDetailScreen() {
             </View>
           </View>
         ) : (
-          <View className="gap-4">
-            {bids.map((bid) => (
-              <BidCard key={bid.id} bid={bid} viewAs="investor" />
-            ))}
+          <View className="gap-6">
+            <View className="gap-4">
+              <View className="flex-row items-center justify-between">
+                <Text selectable className="text-base font-bold uppercase tracking-widest text-slate-500">
+                  Active Bids
+                </Text>
+                <Text selectable className="text-sm text-slate-500">
+                  {activeBids.length}
+                </Text>
+              </View>
+
+              {activeBids.length > 0 ? (
+                <View className="gap-4">
+                  {activeBids.map((bid) => (
+                    <BidCard key={bid.id} bid={bid} viewAs="investor" />
+                  ))}
+                </View>
+              ) : (
+                <View className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-8">
+                  <Text selectable className="text-sm text-slate-500">
+                    No active bids right now.
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {withdrawnBids.length > 0 ? (
+              <View className="gap-4">
+                <View className="flex-row items-center justify-between">
+                  <Text selectable className="text-base font-bold uppercase tracking-widest text-slate-500">
+                    Withdrawn Bids
+                  </Text>
+                  <Text selectable className="text-sm text-slate-500">
+                    {withdrawnBids.length}
+                  </Text>
+                </View>
+
+                <View className="gap-4 opacity-90">
+                  {withdrawnBids.map((bid) => (
+                    <BidCard key={bid.id} bid={bid} viewAs="investor" />
+                  ))}
+                </View>
+              </View>
+            ) : null}
           </View>
         )}
       </View>

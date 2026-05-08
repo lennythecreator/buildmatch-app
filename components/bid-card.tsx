@@ -1,5 +1,5 @@
 import { IconCalendar, IconCoin, IconMessageCircle, IconUser } from "@tabler/icons-react-native";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Badge } from "./ui/badge";
 import { Card } from "./ui/card";
 
@@ -24,6 +24,12 @@ interface BidCardBid {
 interface BidCardProps {
     bid: BidCardBid;
     viewAs: "contractor" | "investor";
+    isSelected?: boolean;
+    isRecommended?: boolean;
+    comparisonScore?: number;
+    onPress?: () => void;
+    actionLabel?: string;
+    onActionPress?: () => void;
 }
 
 function getBidStatusColor(status: string) {
@@ -64,16 +70,36 @@ function formatContractorName(bid: BidCardBid) {
     return fullName || "Contractor";
 }
 
-export default function BidCard({ bid, viewAs }: BidCardProps) {
+function BidCardContent({
+    bid,
+    viewAs,
+    isSelected = false,
+    isRecommended = false,
+    comparisonScore,
+    actionLabel,
+    onActionPress,
+}: BidCardProps) {
     const isContractor = viewAs === "contractor";
 
     return (
-        <Card className="gap-4 rounded-2xl border-border bg-white p-4">
+        <Card
+            className={[
+                "gap-4 rounded-3xl border-0 bg-white p-8 shadow-sm shadow-slate-200/50",
+                isSelected ? "ring-2 ring-accent/30" : "",
+            ].join(" ")}
+        >
             <View className="flex-row items-start justify-between gap-3">
                 <View className="flex-1 gap-1">
-                    <Text className="text-base font-semibold text-foreground">
-                        {isContractor ? bid.job?.title ?? "Job Bid" : formatContractorName(bid)}
-                    </Text>
+                    <View className="flex-row flex-wrap items-center gap-2">
+                        <Text className="text-base font-semibold text-foreground">
+                            {isContractor ? bid.job?.title ?? "Job Bid" : formatContractorName(bid)}
+                        </Text>
+                        {isRecommended ? (
+                            <Badge color="success" size="sm">
+                                Best fit
+                            </Badge>
+                        ) : null}
+                    </View>
                     <Text className="text-sm text-muted">
                         {isContractor
                             ? bid.job?.tradeType?.replace(/_/g, " ") || "Proposal"
@@ -81,9 +107,16 @@ export default function BidCard({ bid, viewAs }: BidCardProps) {
                     </Text>
                 </View>
 
-                <Badge color={getBidStatusColor(bid.status)} size="sm">
-                    {bid.status}
-                </Badge>
+                <View className="items-end gap-2">
+                    <Badge color={getBidStatusColor(bid.status)} size="sm">
+                        {bid.status}
+                    </Badge>
+                    {typeof comparisonScore === "number" ? (
+                        <Text className="text-xs font-semibold uppercase tracking-wide text-foreground/50">
+                            Score {comparisonScore}
+                        </Text>
+                    ) : null}
+                </View>
             </View>
 
             <View className="flex-row items-center gap-3 rounded-2xl bg-slate-50 p-4">
@@ -102,7 +135,7 @@ export default function BidCard({ bid, viewAs }: BidCardProps) {
 
             {bid.message ? (
                 <View className="flex-row gap-3 rounded-2xl bg-slate-50 p-4">
-                    <View className="rounded-xl bg-blue-100 p-2 self-start">
+                    <View className="self-start rounded-xl bg-blue-100 p-2">
                         <IconMessageCircle size={18} color="#2563EB" />
                     </View>
                     <View className="flex-1 gap-1">
@@ -132,6 +165,29 @@ export default function BidCard({ bid, viewAs }: BidCardProps) {
                     </Text>
                 </View>
             </View>
+
+            {actionLabel && onActionPress ? (
+                <Pressable
+                    onPress={onActionPress}
+                    className="items-center justify-center rounded-xl bg-accent px-4 py-3"
+                >
+                    <Text className="text-sm font-semibold text-accent-foreground">
+                        {actionLabel}
+                    </Text>
+                </Pressable>
+            ) : null}
         </Card>
     );
+}
+
+export default function BidCard(props: BidCardProps) {
+    if (props.onPress) {
+        return (
+            <Pressable onPress={props.onPress}>
+                <BidCardContent {...props} />
+            </Pressable>
+        );
+    }
+
+    return <BidCardContent {...props} />;
 }
