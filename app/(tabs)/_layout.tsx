@@ -1,6 +1,6 @@
+import { useAuthStore } from '@/store/auth';
 import { IconBriefcase, IconLayoutDashboard, IconMessage, IconSearch, IconUser } from '@tabler/icons-react-native';
 import { Tabs } from 'expo-router';
-import { useAuthStore } from '@/store/auth';
 
 export default function TabLayout() {
   const { user } = useAuthStore();
@@ -21,7 +21,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          href: null,
+          title: 'Dashboard',
+          tabBarIcon: ({ color, size }) => <IconLayoutDashboard size={size || 24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -33,8 +34,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="investor-dashboard"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <IconLayoutDashboard size={size || 24} color={color} />,
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -47,8 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          href: isInvestor ? undefined : null,
-          title: 'Explore',
+          title: isInvestor ? 'Explore' : 'Search',
           tabBarIcon: ({ color, size }) => <IconSearch size={size || 24} color={color} />,
         }}
       />

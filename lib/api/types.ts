@@ -222,33 +222,42 @@ export interface CreateMessageInput {
 }
 
 export type DisputeCategory =
-  | 'QUALITY'
-  | 'PAYMENT'
-  | 'TIMELINE'
-  | 'COMMUNICATION'
-  | 'SCOPE'
+  | 'WORK_NOT_STARTED'
+  | 'POOR_QUALITY'
+  | 'PAYMENT_ISSUE'
   | 'OTHER';
 
-export type DisputeStatus = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED' | 'CLOSED';
+export type DisputeStatus = 'UNDER_REVIEW' | 'AWAITING_EVIDENCE' | 'PENDING_RULING' | 'RESOLVED' | 'WITHDRAWN';
+
+export interface DisputeUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  role: 'INVESTOR' | 'CONTRACTOR' | 'ADMIN';
+}
 
 export interface Dispute {
   id: string;
   jobId: string;
+  jobTitle: string;
   filedById: string;
-  respondentId: string;
-  category: DisputeCategory;
+  againstId: string;
+  milestoneDraw: string | null;
   amountDisputed: number;
+  category: DisputeCategory;
   description: string;
   desiredOutcome: string;
   status: DisputeStatus;
-  ruling?: string;
-  rulingNote?: string;
-  splitPct?: number;
+  ruling: string | null;
+  rulingNote: string | null;
+  resolvedAt: string | null;
+  lastActivityAt: string;
   createdAt: string;
-  updatedAt: string;
-  job?: Job;
-  filedBy?: Pick<User, 'id' | 'firstName' | 'lastName'>;
-  respondent?: Pick<User, 'id' | 'firstName' | 'lastName'>;
+  filedBy: DisputeUser;
+  against: DisputeUser;
+  evidenceCount: number;
+  messageCount: number;
 }
 
 export interface DisputeMessage {

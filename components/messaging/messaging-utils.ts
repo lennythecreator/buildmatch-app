@@ -18,9 +18,10 @@ export function getConversationPartner(conversation: Conversation | null, curren
     return null;
   }
 
-  const participant = conversation.participants.find((person) => person.id !== currentUserId);
+  const participants = Array.isArray(conversation.participants) ? conversation.participants : [];
+  const participant = participants.find((person) => person.id !== currentUserId);
 
-  return participant ?? conversation.participants[0] ?? null;
+  return participant ?? participants[0] ?? null;
 }
 
 export function formatConversationPreviewTime(timestamp?: string): string {

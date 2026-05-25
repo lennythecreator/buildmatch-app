@@ -1,23 +1,18 @@
 import type { ContractorSpecialty } from "@/lib/api/types";
 import {
-  IconAdjustmentsHorizontal,
-  IconChevronDown,
-  IconMapPin,
-  IconStarFilled,
-  IconX,
+    IconAdjustmentsHorizontal,
+    IconChevronDown,
+    IconMapPin,
+    IconStarFilled,
+    IconX,
 } from "@tabler/icons-react-native";
 import React from "react";
 import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 
 import type { ContractorExploreFiltersValue } from "@/store/contractor-explore";
 import { Card } from "./ui/card";
+import { FilterChip } from "./ui/filter-chip";
 import { Input } from "./ui/input";
-
-interface FilterChipProps {
-  label: React.ReactNode;
-  isActive: boolean;
-  onPress: () => void;
-}
 
 interface ContractorSearchFiltersProps {
   value: ContractorExploreFiltersValue;
@@ -48,33 +43,6 @@ const RATING_OPTIONS: { label: string; value: number | null }[] = [
   { label: "4.0+", value: 4 },
   { label: "3.5+", value: 3.5 },
 ];
-
-function FilterChip({ label, isActive, onPress }: FilterChipProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={[
-        "rounded-full border px-4 py-2.5",
-        isActive ? "border-accent bg-accent" : "border-border bg-background",
-      ].join(" ")}
-    >
-      <View className="flex-row items-center gap-1.5">
-        {typeof label === "string" ? (
-          <Text
-            className={[
-              "text-[13px] font-semibold tracking-wide",
-              isActive ? "text-accent-foreground" : "text-foreground/70",
-            ].join(" ")}
-          >
-            {label}
-          </Text>
-        ) : (
-          label
-        )}
-      </View>
-    </Pressable>
-  );
-}
 
 export function ContractorSearchFilters({
   value,
@@ -134,10 +102,11 @@ export function ContractorSearchFilters({
                 {SPECIALTY_OPTIONS.map((option) => (
                   <FilterChip
                     key={option.value}
-                    label={option.label}
                     isActive={value.specialty === option.value}
                     onPress={() => onChange({ ...value, specialty: option.value })}
-                  />
+                  >
+                    {option.label}
+                  </FilterChip>
                 ))}
               </View>
             </ScrollView>
@@ -185,17 +154,18 @@ export function ContractorSearchFilters({
                       key={option.label}
                       isActive={isActive}
                       onPress={() => onChange({ ...value, ratingMin: option.value })}
-                      label={
+                    >
+                      <View className="flex-row items-center gap-1.5">
+                        {option.value !== null ? (
+                          <IconStarFilled size={14} color={isActive ? '#FFFFFF' : '#F59E0B'} />
+                        ) : null}
                         <View className="flex-row items-center gap-1.5">
-                          {option.value !== null ? (
-                            <IconStarFilled size={14} color={isActive ? "#FFFFFF" : "#F59E0B"} />
-                          ) : null}
-                          <Text className={isActive ? "text-[13px] font-semibold text-accent-foreground" : "text-[13px] font-semibold text-foreground/70"}>
+                          <Text className={isActive ? 'text-[13px] font-semibold text-accent-foreground' : 'text-[13px] font-semibold text-foreground/70'}>
                             {option.label}
                           </Text>
                         </View>
-                      }
-                    />
+                      </View>
+                    </FilterChip>
                   );
                 })}
               </View>

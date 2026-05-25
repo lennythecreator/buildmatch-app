@@ -8,6 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "test:disputes": "node --test --experimental-strip-types --import ./scripts/register-path-aliases.mjs lib/disputes/*.test.ts",
     "lint": "expo lint",
     "type-check": "tsc --noEmit"
   },

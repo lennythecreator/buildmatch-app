@@ -1,22 +1,23 @@
-import ContractorCard from "@/components/contractor-card";
-import { ContractorSearchBar } from "@/components/contractor-search-bar";
-import { ContractorSearchFilters } from "@/components/contractor-search-filters";
-import { Pagination } from "@/components/ui/pagination";
-import { useContractors } from "@/hooks/useContractors";
-import type { ContractorFilters } from "@/lib/api/types";
-import { useAuthStore } from "@/store/auth";
-import { useContractorExploreStore, type ContractorExploreFiltersValue } from "@/store/contractor-explore";
-import { Redirect, router } from "expo-router";
-import React, { useEffect, useMemo } from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ContractorCard from '@/components/contractor-card';
+import { ContractorSearchBar } from '@/components/contractor-search-bar';
+import { ContractorSearchFilters } from '@/components/contractor-search-filters';
+import { JobSearchScreen } from '../../components/job-search-screen';
+import { Pagination } from '@/components/ui/pagination';
+import { useContractors } from '@/hooks/useContractors';
+import type { ContractorFilters } from '@/lib/api/types';
+import { useAuthStore } from '@/store/auth';
+import { useContractorExploreStore, type ContractorExploreFiltersValue } from '@/store/contractor-explore';
+import { router } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
+import { ActivityIndicator, FlatList, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const INITIAL_LIMIT = 12;
 
 function hasActiveContractorFilters(filters: ContractorExploreFiltersValue) {
   return (
     filters.searchQuery.trim().length > 0 ||
-    filters.specialty !== "ALL" ||
+    filters.specialty !== 'ALL' ||
     filters.city.trim().length > 0 ||
     filters.state.trim().length > 0 ||
     filters.ratingMin !== null ||
@@ -24,9 +25,8 @@ function hasActiveContractorFilters(filters: ContractorExploreFiltersValue) {
   );
 }
 
-export default function ExploreScreen() {
+function InvestorExploreView() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuthStore();
   const filters = useContractorExploreStore((state) => state.filters);
   const page = useContractorExploreStore((state) => state.page);
   const isFiltersExpanded = useContractorExploreStore((state) => state.isFiltersExpanded);
@@ -51,7 +51,7 @@ export default function ExploreScreen() {
 
     return {
       ...(normalizedSearchQuery ? { search: normalizedSearchQuery } : {}),
-      ...(filters.specialty !== "ALL" ? { specialty: filters.specialty } : {}),
+      ...(filters.specialty !== 'ALL' ? { specialty: filters.specialty } : {}),
       ...(normalizedCity ? { city: normalizedCity } : {}),
       ...(normalizedState ? { state: normalizedState } : {}),
       ...(filters.ratingMin !== null ? { minRating: filters.ratingMin } : {}),
@@ -77,10 +77,6 @@ export default function ExploreScreen() {
     resetFilters();
   }
 
-  if (user?.role && user.role !== "INVESTOR") {
-    return <Redirect href="/(tabs)/dashboard" />;
-  }
-
   if (isLoading && !hasLoadedOnce) {
     return (
       <View style={{ paddingTop: insets.top }} className="flex-1 bg-background justify-center items-center">
@@ -93,9 +89,7 @@ export default function ExploreScreen() {
   if (isError) {
     return (
       <View style={{ paddingTop: insets.top }} className="flex-1 bg-background justify-center items-center p-6">
-        <Text className="text-danger font-medium text-center">
-          Failed to load contractors. Please try again later.
-        </Text>
+        <Text className="text-danger font-medium text-center">Failed to load contractors. Please try again later.</Text>
       </View>
     );
   }
@@ -110,7 +104,7 @@ export default function ExploreScreen() {
         <ContractorSearchBar
           value={filters.searchQuery}
           onChangeText={(searchQuery) => handleFiltersChange({ ...filters, searchQuery })}
-          onClear={() => handleFiltersChange({ ...filters, searchQuery: "" })}
+          onClear={() => handleFiltersChange({ ...filters, searchQuery: '' })}
         />
       </View>
 
@@ -141,15 +135,13 @@ export default function ExploreScreen() {
         renderItem={({ item }) => (
           <ContractorCard
             contractor={item}
-            onViewProfile={() => router.push({ pathname: "/contractor/[id]", params: { id: item.id } })}
+            onViewProfile={() => router.push({ pathname: '/contractor/[id]', params: { id: item.id } })}
           />
         )}
         ListEmptyComponent={
           <View className="py-12 items-center">
             <Text className="text-muted font-medium text-center">
-              {hasActiveFilters
-                ? "No contractors match your current search."
-                : "No contractors are available to browse right now."}
+              {hasActiveFilters ? 'No contractors match your current search.' : 'No contractors are available to browse right now.'}
             </Text>
           </View>
         }
@@ -168,4 +160,33 @@ export default function ExploreScreen() {
       />
     </View>
   );
+}
+
+function ContractorJobsView() {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={{ paddingTop: insets.top }} className="flex-1 bg-background">
+      <JobSearchScreen
+        title="Search Jobs"
+        description="Browse open work, filter by trade and budget, and page through the latest opportunities."
+        emptyTitle="No open jobs right now."
+        emptyDescription="Check back later or adjust your filters to widen the search."
+      />
+    </View>
+  );
+}
+
+export default function ExploreScreen() {
+  const { user, isLoading } = useAuthStore();
+
+  if (isLoading || !user) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return user.role === 'CONTRACTOR' ? <ContractorJobsView /> : <InvestorExploreView />;
 }

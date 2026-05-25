@@ -1,0 +1,3 @@
+- ADD Splash screen.
+- try to implement some ui elements from Upwork.
+- try to get a more premium look for the application.

@@ -1,6 +1,6 @@
 # BuildMatch
 
-BuildMatch is an Expo React Native marketplace for renovation projects. It connects real estate developers with contractors for project discovery, bidding, matching, payments, and dispute handling.
+BuildMatch is an Expo React Native marketplace for renovation projects.
 
 ## Product Context
 

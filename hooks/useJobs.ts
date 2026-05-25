@@ -5,10 +5,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const JOB_QUERY_KEY = ['jobs'] as const;
 
+interface UserJobsQueryOptions {
+  enabled?: boolean;
+}
+
 export function useJobs(filters?: JobFilters) {
   return useQuery({
     queryKey: [...JOB_QUERY_KEY, 'list', filters],
     queryFn: () => jobService.list(filters),
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 }
 
@@ -20,21 +27,25 @@ export function useJob(id: string) {
   });
 }
 
-export function useMyJobs() {
+export function useMyJobs(options?: UserJobsQueryOptions) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
 
   return useQuery({
     queryKey: [...JOB_QUERY_KEY, 'my-jobs'],
     queryFn: () => jobService.getMyJobs(),
-    enabled: isAuthenticated && !isLoading,
+    enabled: (options?.enabled ?? true) && isAuthenticated && !isLoading,
   });
 }
 
-export function useMyBids() {
+export function useMyBids(options?: UserJobsQueryOptions) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
+
   return useQuery({
     queryKey: [...JOB_QUERY_KEY, 'my-bids'],
     queryFn: () => jobService.getMyBids(),
+    enabled: (options?.enabled ?? true) && isAuthenticated && !isLoading,
   });
 }
 

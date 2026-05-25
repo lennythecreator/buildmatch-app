@@ -2,6 +2,7 @@ import { IconArrowLeft } from '@tabler/icons-react-native';
 import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Message as MessageType } from '@/lib/api/types';
 
@@ -31,6 +32,7 @@ export function Chat({
 }: ChatProps) {
   const scrollViewRef = useRef<ScrollView>(null);
   const [messageText, setMessageText] = useState('');
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: false });
@@ -53,7 +55,10 @@ export function Chat({
       keyboardVerticalOffset={0}
     >
       <View className="flex-1">
-        <View className="flex-row items-center gap-3 border-b border-border bg-surface px-4 py-4">
+        <View
+          className="flex-row items-center gap-3 border-b border-border bg-surface px-4"
+          style={{ paddingTop: insets.top + 16, paddingBottom: 16 }}
+        >
           <Pressable onPress={onBack} hitSlop={10} className="rounded-full bg-slate-100 p-2.5 active:opacity-80">
             <IconArrowLeft size={18} color="#0f172a" />
           </Pressable>

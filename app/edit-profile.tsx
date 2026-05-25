@@ -5,6 +5,7 @@ import { Stack, router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface EditProfileFormValues {
   firstName: string;
@@ -21,6 +22,7 @@ interface EditProfileFormValues {
 export default function EditProfileScreen() {
   const { data: user, isLoading } = useCurrentUser();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
+  const insets = useSafeAreaInsets();
   const { control, handleSubmit, reset, formState: { errors } } = useForm<EditProfileFormValues>({
     defaultValues: {
       firstName: "",
@@ -53,6 +55,13 @@ export default function EditProfileScreen() {
     });
   }, [reset, user]);
 
+  const screenOptions = {
+    headerShown: true,
+    title: "Edit Profile",
+    headerBackTitle: "Back",
+    headerStatusBarHeight: insets.top,
+  };
+
   function handleSave(values: EditProfileFormValues) {
     updateProfile(
       {
@@ -80,7 +89,7 @@ export default function EditProfileScreen() {
   if (isLoading || !user) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50 px-6">
-        <Stack.Screen options={{ headerShown: true, title: "Edit Profile", headerBackTitle: "Back" }} />
+        <Stack.Screen options={screenOptions} />
         <ActivityIndicator size="large" />
         <Text className="mt-4 text-sm font-medium text-gray-500">Loading your profile...</Text>
       </View>
@@ -89,7 +98,7 @@ export default function EditProfileScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1 bg-gray-50">
-      <Stack.Screen options={{ headerShown: true, title: "Edit Profile", headerBackTitle: "Back" }} />
+      <Stack.Screen options={screenOptions} />
 
       <View className="gap-6 p-4 pb-12">
         <View className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm gap-4">

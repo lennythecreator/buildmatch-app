@@ -55,7 +55,7 @@ export default function ContractorDetailScreen() {
   const contractorId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const { data: contractor, isLoading, isError } = useContractor(contractorId ?? "");
-  const { data: myJobsResponse } = useMyJobs();
+  const { data: myJobsResponse, isLoading: isMyJobsLoading } = useMyJobs();
   const { data: savedIds } = useSavedContractorIds();
   const { mutate: toggleSavedContractor, isPending: isTogglingSaved } = useToggleSavedContractor();
   const createConversation = useCreateConversation();
@@ -71,16 +71,25 @@ export default function ContractorDetailScreen() {
   const specialties = contractor?.specialties ?? [];
   const hasBio = Boolean(contractor?.bio?.trim());
   const screenTitle = contractor ? contractorName : "Contractor Profile";
-  const availableJobs = myJobsResponse?.jobs ?? [];
+  const availableJobs = Array.isArray(myJobsResponse)
+    ? myJobsResponse
+    : myJobsResponse?.jobs ?? [];
 
   function getMessagingJobId() {
-    const prioritizedJob = availableJobs.find((job) => job.status === "OPEN" || job.status === "AWARDED");
+    const prioritizedJob =
+      availableJobs.find((job) => job.status === "AWARDED") ??
+      availableJobs.find((job) => job.status === "OPEN");
 
     return prioritizedJob?.id ?? availableJobs[0]?.id ?? null;
   }
 
   async function handleMessageContractor() {
     if (!contractor?.userId) {
+      return;
+    }
+
+    if (isMyJobsLoading) {
+      Alert.alert("Loading jobs", "Please wait until your jobs finish loading, then try again.", [{ text: "OK" }]);
       return;
     }
 
