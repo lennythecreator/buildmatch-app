@@ -1,30 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuthStore } from '@/store/auth';
-import { 
-  useDispute, 
-  useDisputeEvidence, 
-  useDisputeMessages, 
-  useAddDisputeMessage,
+import { DisputeTimeline } from '@/components/disputes/dispute-timeline';
+import { EvidenceCarousel } from '@/components/disputes/evidence-carousel';
+import { MediationThread } from '@/components/disputes/mediation-thread';
+import { UploadEvidence } from '@/components/disputes/upload-evidence';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
   useAddDisputeEvidence,
+  useAddDisputeMessage,
+  useDispute,
+  useDisputeEvidence,
+  useDisputeMessages,
   useWithdrawDispute
 } from '@/hooks/useDisputes';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { EvidenceCarousel } from '@/components/disputes/evidence-carousel';
-import { UploadEvidence } from '@/components/disputes/upload-evidence';
-import { MediationThread } from '@/components/disputes/mediation-thread';
+import { useAuthStore } from '@/store/auth';
 import { IconChevronLeft } from '@tabler/icons-react-native';
-
-const TIMELINE_STEPS = [
-  { id: 'UNDER_REVIEW', label: 'Under Review' },
-  { id: 'AWAITING_EVIDENCE', label: 'Evidence Collection' },
-  { id: 'PENDING_RULING', label: 'Pending Ruling' },
-  { id: 'RESOLVED', label: 'Resolved' }
-];
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function DisputeDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -94,10 +88,8 @@ export default function DisputeDetails() {
     );
   };
 
-  const currentStepIndex = TIMELINE_STEPS.findIndex(s => s.id === dispute.status);
-
   return (
-    <SafeAreaView className="h-full bg-background">
+    <SafeAreaView className="flex-1 bg-background">
       <View className="px-4 py-4 flex-row items-center border-b border-border bg-surface">
         <TouchableOpacity onPress={() => router.back()} className="mr-4 p-1">
           <IconChevronLeft size={24} color="#3b82f6" />
@@ -126,12 +118,12 @@ export default function DisputeDetails() {
       </View>
 
       <ScrollView
-        className="h-full bg-background"
+        className="flex-1 bg-background"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 16,
-          paddingBottom: Math.max(insets.bottom + 24, 40),
+          paddingBottom: Math.max(insets.bottom + 48, 56),
         }}
       >
         {activeSegment === 'DETAILS' ? (
@@ -145,25 +137,7 @@ export default function DisputeDetails() {
               </Text>
             </View>
 
-            {/* Timeline */}
-            <View className="mb-6">
-              <Text className="text-sm font-bold text-foreground mb-3 px-1">Status</Text>
-              <View className="flex-row justify-between px-2">
-                {TIMELINE_STEPS.map((step, index) => {
-                  const isCompleted = currentStepIndex >= index;
-                  const isActive = currentStepIndex === index;
-                  return (
-                    <View key={step.id} className="items-center flex-1">
-                      <View className={`w-4 h-4 rounded-full mb-1 z-10 ${isCompleted ? 'bg-primary' : 'bg-muted'}`} />
-                      <Text className={`text-[9px] text-center ${isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
-                        {step.label}
-                      </Text>
-                    </View>
-                  );
-                })}
-                <View className="absolute top-2 left-6 right-6 h-[2px] bg-muted -z-10" />
-              </View>
-            </View>
+            <DisputeTimeline status={dispute.status} />
 
             <Card className="mb-6">
               <Text className="text-sm font-bold text-foreground mb-2">What happened?</Text>
@@ -197,7 +171,7 @@ export default function DisputeDetails() {
             )}
           </View>
         ) : (
-          <View className="min-h-full">
+          <View className="min-h-0">
             <Text className="text-sm text-muted-foreground px-2 mb-2 text-center">
               This is a secure channel mediated by BuildMatch.
             </Text>

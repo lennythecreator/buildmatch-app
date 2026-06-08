@@ -32,6 +32,8 @@ change.
 
 ## Completed This Round
 
+- Restored the missing `Card` import in the dispute details route after splitting the timeline into a dedicated component.
+- Refined the dispute status timeline into a dedicated milestone card with progress, state-specific copy, and clearer active/completed markers.
 - Switched the dispute details screen and mediation thread shell from flex-based layout sizing to Tailwind height utilities.
 - Switched the disputes list screen sizing from flex-based layout to Tailwind height utilities and kept the bottom safe-area padding on the list content.
 - Expanded the dispute detail screen and mediation container to use the full viewport height so the content area no longer gets cut off at the bottom.
