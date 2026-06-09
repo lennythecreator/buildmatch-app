@@ -2,6 +2,8 @@
 @import 'uniwind';
 
 @theme {
+  --font-sans: "PlusJakartaSans_400Regular";
+
   --color-primary: hsl(210 100% 15%);
   --color-primary-foreground: hsl(0 0% 100%);
   
@@ -22,4 +24,31 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+}
+
+/*
+ * React Native picks a font file by exact family name, not by synthesizing
+ * weight from a single regular cut. Map each weight utility to the matching
+ * Plus Jakarta Sans file so font-medium/semibold/bold/extrabold render the
+ * real weight instead of a faux-bold of the regular.
+ */
+@utility font-normal {
+  font-family: "PlusJakartaSans_400Regular";
+  font-weight: 400;
+}
+@utility font-medium {
+  font-family: "PlusJakartaSans_500Medium";
+  font-weight: 500;
+}
+@utility font-semibold {
+  font-family: "PlusJakartaSans_600SemiBold";
+  font-weight: 600;
+}
+@utility font-bold {
+  font-family: "PlusJakartaSans_700Bold";
+  font-weight: 700;
+}
+@utility font-extrabold {
+  font-family: "PlusJakartaSans_800ExtraBold";
+  font-weight: 800;
 }

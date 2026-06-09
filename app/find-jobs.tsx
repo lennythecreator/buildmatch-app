@@ -1,4 +1,4 @@
-import JobCard from '@/components/job-card';
+import JobCard from '@/components/job/job-card';
 import { Button } from '@/components/ui/button';
 import { useJobs } from '@/hooks/useJobs';
 import type { Job as ApiJob } from '@/lib/api/types';

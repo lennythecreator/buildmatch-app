@@ -1,5 +1,5 @@
-import { DEFAULT_MY_JOBS_FILTERS, MyJobsFilters } from '@/components/my-jobs-filters';
-import JobCard from '@/components/job-card';
+import JobCard from '@/components/job/job-card';
+import { DEFAULT_MY_JOBS_FILTERS, MyJobsFilters } from '@/components/job/my-jobs-filters';
 import { useMyJobs } from '@/hooks/useJobs';
 import React from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';

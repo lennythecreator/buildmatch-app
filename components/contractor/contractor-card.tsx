@@ -9,8 +9,8 @@ import {
 import React from "react";
 import { Image, Pressable, Text, View, type GestureResponderEvent } from "react-native";
 
-import { Button } from "./ui/button";
-import { Card } from "./ui/card";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
 interface ContractorCardProps {
   contractor: ContractorProfile;

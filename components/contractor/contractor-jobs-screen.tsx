@@ -1,5 +1,5 @@
-import JobCard from '@/components/job-card';
-import { ContractorJobsControls, CONTRACTOR_JOB_TABS, DEFAULT_CONTRACTOR_JOBS_FILTERS, type ContractorJobsDeadlineFilter, type ContractorJobsFiltersValue, type ContractorJobsPriceFilter, type ContractorJobsTab } from '@/components/contractor-jobs-controls';
+import { CONTRACTOR_JOB_TABS, ContractorJobsControls, DEFAULT_CONTRACTOR_JOBS_FILTERS, type ContractorJobsDeadlineFilter, type ContractorJobsFiltersValue, type ContractorJobsPriceFilter, type ContractorJobsTab } from '@/components/contractor/contractor-jobs-controls';
+import JobCard from '@/components/job/job-card';
 import { Pagination } from '@/components/ui/pagination';
 import { useMyBids } from '@/hooks/useJobs';
 import type { Job as ApiJob } from '@/lib/api/types';

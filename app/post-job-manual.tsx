@@ -5,7 +5,8 @@ import { US_STATES } from "@/lib/constants";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { uploadService } from "@/lib/api/services/upload";
+import { uploadFiles } from "@/lib/upload";
+import { useAuthStore } from "@/store/auth";
 import { Image } from "expo-image";
 import { IconPhotoPlus, IconX } from "@tabler/icons-react-native";
 import { Controller, useForm } from "react-hook-form";
@@ -31,6 +32,7 @@ export default function PostJobManual() {
     const router = useRouter();
     const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
     const { mutate: createJob, isPending: isCreatingJob } = useCreateJob();
+    const userId = useAuthStore((state) => state.user?.id);
     const [photos, setPhotos] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     
@@ -65,22 +67,21 @@ export default function PostJobManual() {
     };
 
     const onSubmit = async (data: FormValues) => {
+        if (photos.length > 0 && !userId) {
+            alert("Please sign in again before uploading photos.");
+            return;
+        }
         setIsUploading(true);
         try {
             const uploadedUrls: string[] = [];
 
-            if (photos.length > 0) {
-                for (const localUri of photos) {
-                    const { signedUrl: presignedUrl, path } = await uploadService.presignPublic({
-                        filename: `job-photos/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
-                    });
-                    const response = await fetch(localUri);
-                    const blob = await response.blob();
-                    await fetch(presignedUrl, { method: "PUT", body: blob });
-                    uploadedUrls.push(path);
-                }
+            if (photos.length > 0 && userId) {
+                const results = await uploadFiles("job-photos", userId, photos);
+                uploadedUrls.push(...results.map((r) => r.publicUrl));
             }
-            
+
+            console.log("[post-job] creating job with photos", uploadedUrls);
+
             createJob({
                 ...data,
                 budgetMin: Number(data.budgetMin),

@@ -1,10 +1,10 @@
 import { useAuthStore } from "@/store/auth";
 import { IconBriefcase, IconSparkles } from "@tabler/icons-react-native";
 import { ScrollView, Text, View } from "react-native";
-import ActiveBids from "./active-bids";
-import ReliabilityScore from "./reliability-score";
-import TrackPerformance from "./track-performance";
-import { Card } from "./ui/card";
+import ActiveBids from "../active-bids";
+import ReliabilityScore from "../reliability-score";
+import TrackPerformance from "../track-performance";
+import { Card } from "../ui/card";
 
 export default function ContractorDashboard() {
     const { user } = useAuthStore();

@@ -1,5 +1,5 @@
-import InvestorJobsScreen from '@/components/investor-jobs-screen';
-import ContractorJobsScreen from '@/components/contractor-jobs-screen';
+import ContractorJobsScreen from '@/components/contractor/contractor-jobs-screen';
+import InvestorJobsScreen from '@/components/investor/investor-jobs-screen';
 import { useAuthStore } from '@/store/auth';
 import { ActivityIndicator, View } from 'react-native';
 

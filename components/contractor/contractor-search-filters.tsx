@@ -10,9 +10,9 @@ import React from "react";
 import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 
 import type { ContractorExploreFiltersValue } from "@/store/contractor-explore";
-import { Card } from "./ui/card";
-import { FilterChip } from "./ui/filter-chip";
-import { Input } from "./ui/input";
+import { Card } from "../ui/card";
+import { FilterChip } from "../ui/filter-chip";
+import { Input } from "../ui/input";
 
 interface ContractorSearchFiltersProps {
   value: ContractorExploreFiltersValue;

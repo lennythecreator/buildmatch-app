@@ -10,6 +10,7 @@ import {
   IconHistory,
   IconMapPin
 } from "@tabler/icons-react-native";
+import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
@@ -61,6 +62,16 @@ export default function JobDetailScreen() {
   const bids = bidsResponse?.bids ?? [];
   const activeBids = bids.filter((bid) => bid.status !== "WITHDRAWN");
   const withdrawnBids = bids.filter((bid) => bid.status === "WITHDRAWN");
+
+  React.useEffect(() => {
+    if (job) {
+      console.log("[job detail] photos", {
+        jobId: job.id,
+        photos: job.photos,
+        photoCount: Array.isArray(job.photos) ? job.photos.length : "not-an-array",
+      });
+    }
+  }, [job]);
 
   if (!jobId) {
     return (
@@ -157,6 +168,30 @@ export default function JobDetailScreen() {
           {job.description}
         </Text>
       </View>
+
+      {/* Photos */}
+      {job.photos && job.photos.length > 0 ? (
+        <View className="gap-3">
+          <Text selectable className="text-base font-bold uppercase tracking-widest text-slate-500">
+            Photos
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 12 }}
+          >
+            {job.photos.map((uri, index) => (
+              <Image
+                key={`${uri}-${index}`}
+                source={{ uri }}
+                style={{ width: 240, height: 180, borderRadius: 20 }}
+                contentFit="cover"
+                transition={150}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {/* Bids Section */}
       <View className="mt-4 gap-6">

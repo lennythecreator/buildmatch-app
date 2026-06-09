@@ -1,4 +1,4 @@
-import JobCard from "@/components/job-card";
+import JobCard from "@/components/job/job-card";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCurrentUser } from "@/hooks/useAuth";

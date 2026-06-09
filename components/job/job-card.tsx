@@ -1,9 +1,9 @@
-import { useRouter } from "expo-router";
 import { Job } from "@/types/job";
 import { IconCalendar, IconChevronRight, IconCoin, IconMapPin } from "@tabler/icons-react-native";
+import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
-import { Badge } from "./ui/badge";
-import { Card } from "./ui/card";
+import { Badge } from "../ui/badge";
+import { Card } from "../ui/card";
 
 interface JobCardProps {
     job: Job;

@@ -14,6 +14,7 @@ import {
   useWithdrawDispute
 } from '@/hooks/useDisputes';
 import { useAuthStore } from '@/store/auth';
+import { MediaPermissionError, pickImagesFromLibrary, uploadFile } from '@/lib/upload';
 import { IconChevronLeft } from '@tabler/icons-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -26,6 +27,7 @@ export default function DisputeDetails() {
   const user = useAuthStore((state) => state.user);
   const insets = useSafeAreaInsets();
   const [activeSegment, setActiveSegment] = useState<'DETAILS' | 'MEDIATION'>('DETAILS');
+  const [isPickingEvidence, setIsPickingEvidence] = useState(false);
 
   const { data: dispute, isLoading: isLoadingDispute } = useDispute(id);
   const { data: evidence, isLoading: isLoadingEvidence } = useDisputeEvidence(id);
@@ -70,6 +72,35 @@ export default function DisputeDetails() {
 
   const plaintiff = dispute.filedBy;
   const respondent = dispute.against;
+
+  const handleUploadEvidence = async () => {
+    try {
+      setIsPickingEvidence(true);
+      const [uri] = await pickImagesFromLibrary();
+      if (!uri) {
+        return; // user cancelled
+      }
+      const { publicUrl, contentType } = await uploadFile({
+        bucket: 'dispute-evidence',
+        userId: user.id,
+        uri,
+      });
+      addEvidence({
+        disputeId: dispute.id,
+        type: contentType,
+        url: publicUrl,
+        description: 'Uploaded evidence',
+      });
+    } catch (error) {
+      if (error instanceof MediaPermissionError) {
+        Alert.alert('Permission needed', 'Enable photo access in Settings to upload evidence.');
+      } else {
+        Alert.alert('Upload failed', "We couldn't upload your file. Please try again.");
+      }
+    } finally {
+      setIsPickingEvidence(false);
+    }
+  };
 
   const handleWithdraw = () => {
     Alert.alert(
@@ -155,12 +186,9 @@ export default function DisputeDetails() {
                 <EvidenceCarousel evidence={evidence || []} dispute={dispute} />
               )}
               
-              <UploadEvidence 
-                onUpload={() => {
-                  // Stub for native file picker logic, we will trigger upload directly here for testing
-                  addEvidence({ disputeId: dispute.id, type: 'image/jpeg', url: 'https://via.placeholder.com/150', description: 'User Uploaded File' });
-                }} 
-                isLoading={isUploading} 
+              <UploadEvidence
+                onUpload={handleUploadEvidence}
+                isLoading={isUploading || isPickingEvidence}
               />
             </View>
 

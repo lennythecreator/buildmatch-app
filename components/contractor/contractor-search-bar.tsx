@@ -1,7 +1,7 @@
 import React from "react";
 
-import { Card } from "./ui/card";
-import { SearchField } from "./ui/search-field";
+import { Card } from "../ui/card";
+import { SearchField } from "../ui/search-field";
 
 interface ContractorSearchBarProps {
   value: string;

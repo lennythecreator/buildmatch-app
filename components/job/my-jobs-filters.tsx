@@ -3,7 +3,7 @@ import { IconSearch, IconX } from "@tabler/icons-react-native";
 import React from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
-import { Card } from "./ui/card";
+import { Card } from "../ui/card";
 
 interface FilterChipProps {
   label: string;

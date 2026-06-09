@@ -1,7 +1,6 @@
-import ContractorCard from '@/components/contractor-card';
-import { ContractorSearchBar } from '@/components/contractor-search-bar';
-import { ContractorSearchFilters } from '@/components/contractor-search-filters';
-import { JobSearchScreen } from '../../components/job-search-screen';
+import ContractorCard from '@/components/contractor/contractor-card';
+import { ContractorSearchBar } from '@/components/contractor/contractor-search-bar';
+import { ContractorSearchFilters } from '@/components/contractor/contractor-search-filters';
 import { Pagination } from '@/components/ui/pagination';
 import { useContractors } from '@/hooks/useContractors';
 import type { ContractorFilters } from '@/lib/api/types';
@@ -11,6 +10,7 @@ import { router } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { JobSearchScreen } from '../../components/job/job-search-screen';
 
 const INITIAL_LIMIT = 12;
 

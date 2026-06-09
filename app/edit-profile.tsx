@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCurrentUser, useUpdateProfile } from "@/hooks/useAuth";
+import { useCurrentUser, useUpdateAvatar, useUpdateProfile } from "@/hooks/useAuth";
+import { MediaPermissionError, pickImagesFromLibrary, uploadFile } from "@/lib/upload";
+import { Image } from "expo-image";
 import { Stack, router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface EditProfileFormValues {
@@ -22,6 +24,8 @@ interface EditProfileFormValues {
 export default function EditProfileScreen() {
   const { data: user, isLoading } = useCurrentUser();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
+  const { mutate: updateAvatar } = useUpdateAvatar();
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
   const insets = useSafeAreaInsets();
   const { control, handleSubmit, reset, formState: { errors } } = useForm<EditProfileFormValues>({
     defaultValues: {
@@ -86,6 +90,37 @@ export default function EditProfileScreen() {
     );
   }
 
+  async function handleChangeAvatar() {
+    if (!user) {
+      return;
+    }
+    try {
+      setIsUploadingAvatar(true);
+      const [uri] = await pickImagesFromLibrary();
+      if (!uri) {
+        return; // user cancelled
+      }
+      const { publicUrl } = await uploadFile({ bucket: "avatars", userId: user.id, uri });
+      updateAvatar(publicUrl, {
+        onError: () => {
+          Alert.alert("Update failed", "We couldn't update your photo. Please try again.");
+        },
+      });
+    } catch (error) {
+      if (error instanceof MediaPermissionError) {
+        Alert.alert("Permission needed", "Enable photo access in Settings to change your photo.");
+      } else {
+        Alert.alert("Upload failed", "We couldn't upload your photo. Please try again.");
+      }
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
+
+  const initials = user
+    ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
+    : "?";
+
   if (isLoading || !user) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50 px-6">
@@ -101,6 +136,28 @@ export default function EditProfileScreen() {
       <Stack.Screen options={screenOptions} />
 
       <View className="gap-6 p-4 pb-12">
+        <View className="items-center gap-3 py-2">
+          <TouchableOpacity onPress={handleChangeAvatar} disabled={isUploadingAvatar} activeOpacity={0.8}>
+            <View className="h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gray-200">
+              {user.avatarUrl ? (
+                <Image source={{ uri: user.avatarUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+              ) : (
+                <Text className="text-2xl font-bold text-gray-500">{initials}</Text>
+              )}
+              {isUploadingAvatar ? (
+                <View className="absolute inset-0 items-center justify-center bg-black/30">
+                  <ActivityIndicator color="#ffffff" />
+                </View>
+              ) : null}
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleChangeAvatar} disabled={isUploadingAvatar}>
+            <Text className="text-sm font-semibold text-[#1f2937]">
+              {isUploadingAvatar ? "Uploading..." : "Change photo"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm gap-4">
           <Text className="text-xs font-bold uppercase tracking-wider text-gray-500">Basic Info</Text>
 

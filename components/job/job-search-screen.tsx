@@ -1,5 +1,5 @@
-import JobCard from '@/components/job-card';
-import { DEFAULT_JOB_SEARCH_FILTERS, JobSearchControls, type JobSearchFiltersValue } from '@/components/job-search-controls';
+import JobCard from '@/components/job/job-card';
+import { DEFAULT_JOB_SEARCH_FILTERS, JobSearchControls, type JobSearchFiltersValue } from '@/components/job/job-search-controls';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination';
