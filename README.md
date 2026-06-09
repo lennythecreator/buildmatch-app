@@ -54,6 +54,8 @@ Current required public variable:
 
 ```bash
 EXPO_PUBLIC_API_URL=http://localhost:3001
+EXPO_PUBLIC_SUPABASE_URL=
+EXPO_PUBLIC_SUPABASE_KEY=
 ```
 
 ### Run the app

@@ -155,6 +155,11 @@ export default function BidComparisonScreen() {
                 onSuccess: () => {
                   Alert.alert("Bid accepted", "The job has been awarded.", [
                     { text: "View job", onPress: () => router.replace({ pathname: "/job/[id]", params: { id: jobId } }) },
+                    {
+                      text: "Draft agreement",
+                      onPress: () =>
+                        router.replace(`/agreements/${jobId}?bidId=${bidId}` as never),
+                    },
                   ]);
                 },
                 onError: () => {

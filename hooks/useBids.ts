@@ -4,6 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const BID_QUERY_KEY = ['bids'] as const;
 
+interface BidQueryOptions {
+  enabled?: boolean;
+}
+
 function normalizeBidListResponse(response: BidListResponse | Bid[]): BidListResponse {
   if (Array.isArray(response)) {
     return {
@@ -17,7 +21,7 @@ function normalizeBidListResponse(response: BidListResponse | Bid[]): BidListRes
   return response;
 }
 
-export function useBids(jobId: string) {
+export function useBids(jobId: string, options?: BidQueryOptions) {
   return useQuery({
     queryKey: [...BID_QUERY_KEY, 'job', jobId],
     queryFn: async () => {
@@ -46,15 +50,15 @@ export function useBids(jobId: string) {
         throw error;
       }
     },
-    enabled: !!jobId,
+    enabled: (options?.enabled ?? true) && !!jobId,
   });
 }
 
-export function useMyBid(jobId: string) {
+export function useMyBid(jobId: string, options?: BidQueryOptions) {
   return useQuery({
     queryKey: [...BID_QUERY_KEY, 'my-bid', jobId],
     queryFn: () => bidService.getMyBid(jobId),
-    enabled: !!jobId,
+    enabled: (options?.enabled ?? true) && !!jobId,
   });
 }
 
