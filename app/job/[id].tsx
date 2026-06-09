@@ -7,6 +7,7 @@ import {
   IconCalendar,
   IconCash,
   IconDotsVertical,
+  IconFileText,
   IconHistory,
   IconMapPin
 } from "@tabler/icons-react-native";
@@ -40,10 +41,6 @@ function formatCurrency(amount: number) {
 
 function formatTradeType(tradeType: string) {
   return tradeType.replace(/_/g, " ");
-}
-
-function formatBidCount(count: number) {
-  return `${count} ${count === 1 ? "bid" : "bids"}`;
 }
 
 export default function JobDetailScreen() {
@@ -149,6 +146,19 @@ export default function JobDetailScreen() {
         <Text selectable className="text-5xl font-extrabold leading-tight tracking-tight text-slate-900">
           {job.title}
         </Text>
+
+        {job.status === "AWARDED" ? (
+          <Button
+            variant="primary"
+            className="mt-2"
+            onPress={() => router.push(`/agreements/${jobId}` as never)}
+          >
+            <View className="flex-row items-center justify-center gap-2">
+              <IconFileText size={18} color="#ffffff" />
+              <Text className="font-semibold text-accent-foreground">Project agreement</Text>
+            </View>
+          </Button>
+        ) : null}
       </View>
 
       {/* Description Card */}

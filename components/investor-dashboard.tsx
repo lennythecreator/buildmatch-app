@@ -143,7 +143,7 @@ export default function InvestorDashboard() {
             <Text className="text-center text-foreground/60 mb-6 max-w-sm">
               Post your first job to start receiving bids from qualified contractors in your area.
             </Text>
-            <Button variant="primary" size="md">
+            <Button variant="primary" size="md" onPress={() => router.push('/post-job')}>
               Post your first job
             </Button>
           </Card>

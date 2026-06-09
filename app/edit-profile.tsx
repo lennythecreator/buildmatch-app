@@ -5,7 +5,6 @@ import { Stack, router } from "expo-router";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface EditProfileFormValues {
   firstName: string;
@@ -22,7 +21,6 @@ interface EditProfileFormValues {
 export default function EditProfileScreen() {
   const { data: user, isLoading } = useCurrentUser();
   const { mutate: updateProfile, isPending } = useUpdateProfile();
-  const insets = useSafeAreaInsets();
   const { control, handleSubmit, reset, formState: { errors } } = useForm<EditProfileFormValues>({
     defaultValues: {
       firstName: "",
@@ -59,7 +57,6 @@ export default function EditProfileScreen() {
     headerShown: true,
     title: "Edit Profile",
     headerBackTitle: "Back",
-    headerStatusBarHeight: insets.top,
   };
 
   function handleSave(values: EditProfileFormValues) {

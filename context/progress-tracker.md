@@ -9,7 +9,7 @@ change.
 
 ## Current Goal
 
-- Polish and validate shared search component consistency across jobs, contractors, and messaging.
+- Build the first no-database AI-assisted project agreement draft preview for awarded jobs.
 
 ## Completed
 
@@ -23,15 +23,26 @@ change.
 - Added a role-aware search tab that shows contractor jobs with search, filters, and pagination.
 - Contractor jobs tab now uses role-aware content with tabs, search, filters, and pagination.
 - Contractor jobs now use the contractor bid feed and exclude completed from the contractor-only view.
+- Added a no-database AI-assisted project agreement draft preview for awarded jobs, including shared draft sections, developer summary, contractor summary, and clause risk review.
 
 ## In Progress
 
 - Messaging is wired to live API queries with polling-backed refresh.
 - Attachment sending is still UI-only because the current API contract does not define message uploads.
 - Contractor profile messaging now normalizes the investor job payload, waits for jobs to load, and creates a conversation from an available job before opening the thread.
+- Project agreement drafting is currently a local preview generated from existing job and accepted bid data; PDF generation, backend AI, and DocuSign are not connected yet.
 
 ## Completed This Round
 
+- Wired the investor dashboard empty-state `Post your first job` button to the same post-job flow as the header `Post a job` action.
+- Added an explicit back control to contractor profile detail headers so profiles opened from search/explore always provide a visible way back.
+- Fixed root stack navigation so top-level pushed flows like post job, manual post job, edit profile, find jobs, bids, and project agreements get native headers/back navigation while the main tab shell remains headerless.
+- Removed unsupported native stack `headerStatusBarHeight` options from job, contractor, and edit profile stack headers, clearing the previous header option type errors.
+- Added a feature spec for AI-assisted project agreement drafting with one shared agreement, role-specific summaries, and clause risk review.
+- Added a local project agreement draft generator that uses existing job and accepted bid data without requiring database changes.
+- Added a project agreement review screen with shared contract draft sections, developer summary, contractor summary, risk flags, and a DocuSign placeholder action.
+- Added an Expo Router agreement route and role-aware bid loading so investors use accepted bid data and contractors use their own accepted bid.
+- Added project agreement entry points from awarded job details and the post-bid-acceptance success flow.
 - Switched the dispute details screen and mediation thread shell from flex-based layout sizing to Tailwind height utilities.
 - Switched the disputes list screen sizing from flex-based layout to Tailwind height utilities and kept the bottom safe-area padding on the list content.
 - Expanded the dispute detail screen and mediation container to use the full viewport height so the content area no longer gets cut off at the bottom.
@@ -78,15 +89,25 @@ change.
 ## Open Questions
 
 - Should message attachments be added to the API contract, or remain preview-only for now?
+- Which attorney-reviewed template family should become the source of truth for the production agreement clauses?
+- Should the first production integration call a backend AI endpoint before DocuSign, or should it first generate deterministic PDFs from approved templates?
 
 ## Architecture Decisions
 
+- AI-assisted project agreement drafting starts as one canonical shared agreement with role-specific summaries, not two separate contracts, to avoid conflicting obligations.
+- The first project agreement slice avoids database writes and backend contract endpoints until the contract storage, AI, PDF, and DocuSign lifecycle is finalized.
 - Active contractor bids are resolved by combining `GET /api/jobs/my-bids` with each job's `GET /api/jobs/:jobId/bids/my-bid` response because the my-bids endpoint returns jobs, not bids.
 - Performance and dashboard widgets should reuse the same live contractor bid query to avoid diverging mock data paths.
 - Messaging uses the same REST query layer for now, with a dedicated conversation hook and polling refresh so the implementation can switch to realtime channels later without changing the screen components.
 
 ## Session Notes
 
+- `npm.cmd run lint` passes with warnings only after the dashboard/profile navigation fixes; remaining warnings are unrelated existing warnings.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues.
+- `npm.cmd run lint` passes with warnings only after the navigation header update; remaining warnings are unrelated existing warnings in contractor profile, contractor job controls, job search controls, and messaging conversations.
+- `npm.cmd run type-check` no longer reports the previous `headerStatusBarHeight` navigation errors; it remains blocked by existing dispute test/normalization typing issues.
+- `npm.cmd run lint` passes with warnings only after adding the project agreement preview; remaining warnings are unrelated existing warnings in contractor profile, contractor job controls, job search controls, and messaging conversations.
+- `npm.cmd run type-check` is still blocked by pre-existing `headerStatusBarHeight` option errors and dispute test/normalization typing issues; the new agreement route typing issues were resolved.
 - `npm.cmd run test:disputes` passes after adding dispute detail response normalization coverage for evidence and mediation payload shapes.
 - `npm.cmd run lint` passes with warnings only; current warnings remain in `app/contractor/[id].tsx`, `app/job/[id].tsx`, `components/contractor-jobs-controls.tsx`, `components/job-search-controls.tsx`, and `components/messaging/conversations.tsx`.
 - `npm run test:disputes` passes for dispute filing job normalization and eligibility filtering.
