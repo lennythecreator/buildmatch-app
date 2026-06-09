@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { useCreateJob } from "@/hooks/useJobs";
+import { ApiError } from "@/lib/api/client";
 import { JobTradeType } from "@/lib/api/types";
 import { US_STATES } from "@/lib/constants";
+import { useAuthStore } from "@/store/auth";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -9,7 +11,7 @@ import { uploadService } from "@/lib/api/services/upload";
 import { Image } from "expo-image";
 import { IconPhotoPlus, IconX } from "@tabler/icons-react-native";
 import { Controller, useForm } from "react-hook-form";
-import { ActivityIndicator, FlatList, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 type FormValues = {
     title: string;
@@ -27,10 +29,16 @@ const TRADES: JobTradeType[] = [
     'FLOORING', 'PAINTING', 'LANDSCAPING', 'DEMOLITION', 'OTHER'
 ];
 
+const MIN_JOB_TITLE_LENGTH = 10;
+const MAX_JOB_TITLE_LENGTH = 120;
+const MIN_JOB_DESCRIPTION_LENGTH = 50;
+const MAX_JOB_DESCRIPTION_LENGTH = 2000;
+
 export default function PostJobManual() {
     const router = useRouter();
     const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
-    const { mutate: createJob, isPending: isCreatingJob } = useCreateJob();
+    const { mutateAsync: createJob, isPending: isCreatingJob } = useCreateJob();
+    const userId = useAuthStore((state) => state.user?.id);
     const [photos, setPhotos] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     
@@ -64,15 +72,35 @@ export default function PostJobManual() {
         setPhotos(prev => prev.filter((_, i) => i !== index));
     };
 
+    function showSubmitError(error: unknown) {
+        if (error instanceof ApiError) {
+            const details = error.errors?.length ? `\n\n${error.errors.join("\n")}` : "";
+            Alert.alert("Could not create job", `${error.message}${details}`);
+            return;
+        }
+
+        if (error instanceof Error) {
+            Alert.alert("Could not create job", error.message);
+            return;
+        }
+
+        Alert.alert("Could not create job", "An unknown error occurred while creating the job.");
+    }
+
     const onSubmit = async (data: FormValues) => {
         setIsUploading(true);
         try {
             const uploadedUrls: string[] = [];
 
             if (photos.length > 0) {
+                if (!userId) {
+                    throw new Error("You need to be signed in before uploading job photos.");
+                }
+
                 for (const localUri of photos) {
-                    const { signedUrl: presignedUrl, path } = await uploadService.presignPublic({
-                        filename: `job-photos/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
+                    const { signedUrl: presignedUrl, path } = await uploadService.presign({
+                        bucket: "job-photos",
+                        path: `${userId}/job-photos/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
                     });
                     const response = await fetch(localUri);
                     const blob = await response.blob();
@@ -81,18 +109,16 @@ export default function PostJobManual() {
                 }
             }
             
-            createJob({
+            await createJob({
                 ...data,
                 budgetMin: Number(data.budgetMin),
                 budgetMax: Number(data.budgetMax),
                 ...(uploadedUrls.length > 0 ? { photos: uploadedUrls } : {})
-            }, {
-                onSuccess: () => router.push("/(tabs)/jobs"),
-                onError: () => alert("An error occurred creating the job.")
             });
+            router.push("/(tabs)/jobs");
         } catch (error) {
             console.error("Failed to upload photos or create job", error);
-            alert("Failed to upload photos or create job");
+            showSubmitError(error);
         } finally {
             setIsUploading(false);
         }
@@ -108,20 +134,52 @@ export default function PostJobManual() {
                     <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Job Details</Text>
                     
                     <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1.5">Job Title</Text>
                         <Controller
                             control={control}
-                            rules={{ required: "Title is required" }}
+                            rules={{
+                                required: "Title is required",
+                                minLength: { value: MIN_JOB_TITLE_LENGTH, message: "Title must be at least 10 characters" },
+                                maxLength: { value: MAX_JOB_TITLE_LENGTH, message: "Title must be 120 characters or less" },
+                            }}
                             name="title"
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    className={`border rounded-xl p-3 text-base text-gray-900 bg-white ${errors.title ? "border-red-500" : "border-gray-200"}`}
-                                    placeholder="e.g. Full kitchen renovation"
-                                    placeholderTextColor="#9CA3AF"
-                                    onChangeText={onChange}
-                                    value={value}
-                                />
-                            )}
+                            render={({ field: { onChange, value } }) => {
+                                const trimmedLength = value.trim().length;
+                                const isTooShort = trimmedLength > 0 && trimmedLength < MIN_JOB_TITLE_LENGTH;
+                                const isTooLong = trimmedLength > MAX_JOB_TITLE_LENGTH;
+                                const isInvalidLength = isTooShort || isTooLong;
+
+                                return (
+                                    <View className="gap-1.5">
+                                        <View className="flex-row items-center justify-between gap-3">
+                                            <Text className="text-sm font-medium text-gray-700">Job Title</Text>
+                                            <Text
+                                                className={`text-xs font-medium ${
+                                                    isInvalidLength ? "text-red-500" : "text-gray-500"
+                                                }`}
+                                            >
+                                                {isTooLong
+                                                    ? `${trimmedLength}/${MAX_JOB_TITLE_LENGTH} max`
+                                                    : `${Math.min(trimmedLength, MIN_JOB_TITLE_LENGTH)}/${MIN_JOB_TITLE_LENGTH} min`}
+                                            </Text>
+                                        </View>
+                                        <TextInput
+                                            className={`border rounded-xl p-3 text-base text-gray-900 bg-white ${errors.title ? "border-red-500" : "border-gray-200"}`}
+                                            placeholder="e.g. Full kitchen renovation"
+                                            placeholderTextColor="#9CA3AF"
+                                            onChangeText={onChange}
+                                            value={value}
+                                        />
+                                        <Text
+                                            selectable
+                                            className={`text-xs leading-5 ${isInvalidLength ? "text-red-500" : "text-gray-500"}`}
+                                        >
+                                            {isTooLong
+                                                ? `Job titles must be ${MAX_JOB_TITLE_LENGTH} characters or less.`
+                                                : `Job titles must be at least ${MIN_JOB_TITLE_LENGTH} characters.`}
+                                        </Text>
+                                    </View>
+                                );
+                            }}
                         />
                         {errors.title && <Text className="text-red-500 text-xs mt-1">{errors.title.message}</Text>}
                     </View>
@@ -152,22 +210,54 @@ export default function PostJobManual() {
                     </View>
 
                     <View>
-                        <Text className="text-sm font-medium text-gray-700 mb-1.5">Description</Text>
                         <Controller
                             control={control}
-                            rules={{ required: "Description is required" }}
+                            rules={{
+                                required: "Description is required",
+                                minLength: { value: MIN_JOB_DESCRIPTION_LENGTH, message: "Description must be at least 50 characters" },
+                                maxLength: { value: MAX_JOB_DESCRIPTION_LENGTH, message: "Description must be 2000 characters or less" },
+                            }}
                             name="description"
-                            render={({ field: { onChange, value } }) => (
-                                <TextInput
-                                    multiline
-                                    textAlignVertical="top"
-                                    className={`border rounded-xl p-3 min-h-[120px] text-base text-gray-900 bg-white ${errors.description ? "border-red-500" : "border-gray-200"}`}
-                                    placeholder="Describe the scope of work..."
-                                    placeholderTextColor="#9CA3AF"
-                                    onChangeText={onChange}
-                                    value={value}
-                                />
-                            )}
+                            render={({ field: { onChange, value } }) => {
+                                const trimmedLength = value.trim().length;
+                                const isTooShort = trimmedLength > 0 && trimmedLength < MIN_JOB_DESCRIPTION_LENGTH;
+                                const isTooLong = trimmedLength > MAX_JOB_DESCRIPTION_LENGTH;
+                                const isInvalidLength = isTooShort || isTooLong;
+
+                                return (
+                                    <View className="gap-1.5">
+                                        <View className="flex-row items-center justify-between gap-3">
+                                            <Text className="text-sm font-medium text-gray-700">Description</Text>
+                                            <Text
+                                                className={`text-xs font-medium ${
+                                                    isInvalidLength ? "text-red-500" : "text-gray-500"
+                                                }`}
+                                            >
+                                                {isTooLong
+                                                    ? `${trimmedLength}/${MAX_JOB_DESCRIPTION_LENGTH} max`
+                                                    : `${Math.min(trimmedLength, MIN_JOB_DESCRIPTION_LENGTH)}/${MIN_JOB_DESCRIPTION_LENGTH} min`}
+                                            </Text>
+                                        </View>
+                                        <TextInput
+                                            multiline
+                                            textAlignVertical="top"
+                                            className={`border rounded-xl p-3 min-h-[120px] text-base text-gray-900 bg-white ${errors.description ? "border-red-500" : "border-gray-200"}`}
+                                            placeholder="Describe the scope of work..."
+                                            placeholderTextColor="#9CA3AF"
+                                            onChangeText={onChange}
+                                            value={value}
+                                        />
+                                        <Text
+                                            selectable
+                                            className={`text-xs leading-5 ${isInvalidLength ? "text-red-500" : "text-gray-500"}`}
+                                        >
+                                            {isTooLong
+                                                ? `Descriptions must be ${MAX_JOB_DESCRIPTION_LENGTH} characters or less.`
+                                                : `Descriptions must be at least ${MIN_JOB_DESCRIPTION_LENGTH} characters.`}
+                                        </Text>
+                                    </View>
+                                );
+                            }}
                         />
                         {errors.description && <Text className="text-red-500 text-xs mt-1">{errors.description.message}</Text>}
                     </View>
@@ -182,7 +272,10 @@ export default function PostJobManual() {
                             <Text className="text-sm font-medium text-gray-700 mb-1.5">Minimum ($)</Text>
                             <Controller
                                 control={control}
-                                rules={{ required: "Min budget required" }}
+                                rules={{
+                                    required: "Min budget required",
+                                    validate: (value) => Number(value) > 0 || "Minimum budget must be greater than 0",
+                                }}
                                 name="budgetMin"
                                 render={({ field: { onChange, value } }) => (
                                     <TextInput
@@ -201,7 +294,18 @@ export default function PostJobManual() {
                             <Text className="text-sm font-medium text-gray-700 mb-1.5">Maximum ($)</Text>
                             <Controller
                                 control={control}
-                                rules={{ required: "Max budget required" }}
+                                rules={{
+                                    required: "Max budget required",
+                                    validate: (value, formValues) => {
+                                        const maxBudget = Number(value);
+                                        const minBudget = Number(formValues.budgetMin);
+                                        if (maxBudget <= 0) {
+                                            return "Maximum budget must be greater than 0";
+                                        }
+
+                                        return maxBudget > minBudget || "Maximum budget must be greater than minimum budget";
+                                    },
+                                }}
                                 name="budgetMax"
                                 render={({ field: { onChange, value } }) => (
                                     <TextInput
@@ -338,7 +442,10 @@ export default function PostJobManual() {
                         <Text className="text-sm font-medium text-gray-700 mb-1.5">Zip Code</Text>
                         <Controller
                             control={control}
-                            rules={{ required: "Zip code required" }}
+                            rules={{
+                                required: "Zip code required",
+                                pattern: { value: /^\d{5}$/, message: "Enter a valid 5-digit zip code" },
+                            }}
                             name="zipCode"
                             render={({ field: { onChange, value } }) => (
                                 <TextInput

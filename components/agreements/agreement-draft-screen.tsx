@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { ProjectAgreementDraft } from '@/lib/agreements/project-agreement-draft';
-import { IconAlertTriangle, IconFileText, IconInfoCircle, IconSignature } from '@tabler/icons-react-native';
+import { IconAlertTriangle, IconCircleCheck, IconCircleDashed, IconFileText, IconInfoCircle, IconSignature } from '@tabler/icons-react-native';
 import { Alert, ScrollView, Text, View } from 'react-native';
 
 interface AgreementDraftScreenProps {
@@ -83,6 +83,17 @@ export function AgreementDraftScreen({ draft, isReadyForSignature }: AgreementDr
         </View>
 
         <View className="flex-row flex-wrap gap-3">
+          <View className="min-w-[140px] flex-1 rounded-2xl bg-background p-4">
+            <Text className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
+              Template
+            </Text>
+            <Text selectable className="mt-2 text-base font-bold text-foreground">
+              {draft.template.name}
+            </Text>
+            <Text selectable className="mt-1 text-xs text-foreground/50">
+              v{draft.template.version} · {draft.template.reviewStatus.replace(/-/g, ' ')}
+            </Text>
+          </View>
           {draft.parties.map((party) => (
             <View key={party.label} className="min-w-[140px] flex-1 rounded-2xl bg-background p-4">
               <Text className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
@@ -141,6 +152,27 @@ export function AgreementDraftScreen({ draft, isReadyForSignature }: AgreementDr
             <Text selectable className="text-sm leading-5 text-foreground/70">
               {riskFlag.description}
             </Text>
+          </View>
+        ))}
+      </View>
+
+      <View className="gap-4 rounded-3xl border border-border bg-surface p-5">
+        <SectionHeader title="Draft Readiness" subtitle="These inputs should be complete before PDF generation and DocuSign." />
+        {draft.readinessItems.map((item) => (
+          <View key={item.id} className="flex-row gap-3 rounded-2xl bg-background p-4">
+            {item.isComplete ? (
+              <IconCircleCheck size={20} color="#10b981" />
+            ) : (
+              <IconCircleDashed size={20} color="#64748b" />
+            )}
+            <View className="flex-1 gap-1">
+              <Text selectable className="text-base font-bold text-foreground">
+                {item.label}
+              </Text>
+              <Text selectable className="text-sm leading-5 text-foreground/60">
+                {item.detail}
+              </Text>
+            </View>
           </View>
         ))}
       </View>

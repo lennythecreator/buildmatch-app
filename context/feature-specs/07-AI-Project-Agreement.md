@@ -9,6 +9,8 @@ This feature helps both parties review a shared project agreement after a bid is
 - Present one shared contract draft that both parties review.
 - Present a developer summary and contractor summary.
 - Present a clause risk review for missing or weak terms.
+- Present template source, version, and review status.
+- Present a readiness checklist before PDF generation or DocuSign.
 - Clearly label the output as a draft preview and not legal advice.
 - Do not persist contracts until the backend contract storage model is available.
 
@@ -27,7 +29,8 @@ This feature helps both parties review a shared project agreement after a bid is
 2. The app offers a project agreement draft action.
 3. The draft preview is generated from existing project data.
 4. Both parties can review the shared agreement, their role-specific summary, and risk flags.
-5. A future backend step generates a PDF and sends it to DocuSign.
+5. Both parties can see readiness gaps before the draft can become a signable PDF.
+6. A future backend step generates a PDF and sends it to DocuSign.
 
 ## Future Backend Requirements
 

@@ -34,6 +34,19 @@ change.
 
 ## Completed This Round
 
+- Added a visible `Dashboard` header action on project details so users can return to the role dashboard after opening a job.
+- Added a contractor-only bid submission form on open job details so the investor-to-contractor bid pipeline can be tested directly in the app.
+- Added contractor bid message validation so bids under the 50-character proposal requirement show inline guidance and a clear alert before calling the API.
+- Added post-job title and description character counters so developers can see the 10-character title and 50-character description minimums while typing.
+- Hid investor bid comparison content from contractor job details and showed contractors their own bid status instead.
+- Hardened the manual post-job form with frontend validation matching the backend create-job contract: title length, description length, positive budgets, max greater than min, and 5-digit zip code.
+- Changed manual job creation to await the mutation and display the actual backend `ApiError` message/errors instead of a generic failure alert.
+- Switched manual job photo upload from anonymous public presign to authenticated `job-photos` presign using the current user id path prefix.
+- Added an agreement template metadata layer with template id, version, review status, and required clause definitions.
+- Added a normalized project agreement input payload so job and accepted bid data can later be sent to backend AI/PDF/DocuSign services cleanly.
+- Refactored the local draft generator to consume the normalized agreement input while preserving the existing route behavior.
+- Added template status and draft readiness checklist sections to the project agreement preview.
+- Added backend integration documentation for AI draft generation, PDF generation, DocuSign envelope creation, and audit/storage requirements.
 - Wired the investor dashboard empty-state `Post your first job` button to the same post-job flow as the header `Post a job` action.
 - Added an explicit back control to contractor profile detail headers so profiles opened from search/explore always provide a visible way back.
 - Fixed root stack navigation so top-level pushed flows like post job, manual post job, edit profile, find jobs, bids, and project agreements get native headers/back navigation while the main tab shell remains headerless.
@@ -94,6 +107,7 @@ change.
 
 ## Architecture Decisions
 
+- Project agreement generation now separates source data normalization, template metadata, and draft rendering so the future backend can reuse the same payload shape.
 - AI-assisted project agreement drafting starts as one canonical shared agreement with role-specific summaries, not two separate contracts, to avoid conflicting obligations.
 - The first project agreement slice avoids database writes and backend contract endpoints until the contract storage, AI, PDF, and DocuSign lifecycle is finalized.
 - Active contractor bids are resolved by combining `GET /api/jobs/my-bids` with each job's `GET /api/jobs/:jobId/bids/my-bid` response because the my-bids endpoint returns jobs, not bids.
@@ -102,6 +116,16 @@ change.
 
 ## Session Notes
 
+- `npm.cmd run lint` passes with warnings only after adding the project detail dashboard action and contractor bid form.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues; the new job detail changes do not add type errors.
+- `npm.cmd run lint` passes with warnings only after adding contractor bid message validation.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues; the bid validation change did not introduce new type errors.
+- `npm.cmd run lint` passes with warnings only after adding post-job character counters.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues; the post-job counter change did not introduce new type errors.
+- `npm.cmd run lint` passes with warnings only after improving manual post-job validation and error handling.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues.
+- `npm.cmd run lint` passes with warnings only after adding agreement template metadata, normalized agreement input, readiness checks, and integration docs.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues; no new agreement type errors were reported.
 - `npm.cmd run lint` passes with warnings only after the dashboard/profile navigation fixes; remaining warnings are unrelated existing warnings.
 - `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues.
 - `npm.cmd run lint` passes with warnings only after the navigation header update; remaining warnings are unrelated existing warnings in contractor profile, contractor job controls, job search controls, and messaging conversations.

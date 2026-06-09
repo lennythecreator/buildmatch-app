@@ -1,4 +1,5 @@
 import type { Bid, Job, User } from '@/lib/api/types';
+import { createProjectAgreementInput, type AgreementReadinessItem, type ProjectAgreementInput } from './project-agreement-input';
 
 interface AgreementParty {
   label: string;
@@ -15,6 +16,11 @@ interface AgreementRiskFlag {
 interface ProjectAgreementDraft {
   title: string;
   disclaimer: string;
+  template: {
+    name: string;
+    version: string;
+    reviewStatus: string;
+  };
   parties: AgreementParty[];
   contractSections: Array<{
     title: string;
@@ -23,6 +29,7 @@ interface ProjectAgreementDraft {
   developerSummary: string[];
   contractorSummary: string[];
   riskFlags: AgreementRiskFlag[];
+  readinessItems: AgreementReadinessItem[];
 }
 
 function formatCurrency(amount: number) {
@@ -43,18 +50,10 @@ function getUserName(user?: Pick<User, 'firstName' | 'lastName'> | null) {
   return name || 'To be confirmed';
 }
 
-function getContractorName(bid?: Bid | null) {
-  return getUserName(bid?.contractor);
-}
-
-function getPaymentAmount(job: Job, bid?: Bid | null) {
-  return bid?.amount ?? Math.round((job.budgetMin + job.budgetMax) / 2);
-}
-
-function getRiskFlags(job: Job, bid?: Bid | null): AgreementRiskFlag[] {
+function getRiskFlags(input: ProjectAgreementInput): AgreementRiskFlag[] {
   const riskFlags: AgreementRiskFlag[] = [];
 
-  if (!bid) {
+  if (!input.bidId) {
     riskFlags.push({
       title: 'Accepted bid missing',
       description: 'The agreement needs the accepted bid amount and contractor before it can be sent for signature.',
@@ -62,7 +61,7 @@ function getRiskFlags(job: Job, bid?: Bid | null): AgreementRiskFlag[] {
     });
   }
 
-  if (job.description.trim().length < 120) {
+  if (input.scopeDescription.trim().length < 120) {
     riskFlags.push({
       title: 'Scope may be too brief',
       description: 'Add more detail about included work, exclusions, materials, and acceptance criteria before signing.',
@@ -82,19 +81,32 @@ function getRiskFlags(job: Job, bid?: Bid | null): AgreementRiskFlag[] {
     severity: 'medium',
   });
 
+  if (input.template.reviewStatus !== 'approved') {
+    riskFlags.push({
+      title: 'Template needs legal review',
+      description: 'The current template is a BuildMatch draft placeholder and should be replaced with an attorney-reviewed template before production use.',
+      severity: 'high',
+    });
+  }
+
   return riskFlags;
 }
 
-export function generateProjectAgreementDraft(job: Job, bid?: Bid | null): ProjectAgreementDraft {
-  const paymentAmount = getPaymentAmount(job, bid);
-  const developerName = getUserName(job.postedBy);
-  const contractorName = getContractorName(bid);
-  const location = `${job.city}, ${job.state} ${job.zipCode}`.trim();
+export function generateProjectAgreementDraftFromInput(input: ProjectAgreementInput): ProjectAgreementDraft {
+  const paymentAmount = input.contractAmount;
+  const developerName = input.parties.developer.name;
+  const contractorName = input.parties.contractor.name;
+  const tradeType = formatTradeType(input.tradeType);
 
   return {
-    title: `${job.title} Project Agreement`,
+    title: `${input.title} Project Agreement`,
     disclaimer:
       'Draft preview for review only. This is not legal advice and should be reviewed before signature.',
+    template: {
+      name: input.template.name,
+      version: input.template.version,
+      reviewStatus: input.template.reviewStatus,
+    },
     parties: [
       { label: 'Developer', name: developerName, role: 'Project owner / investor' },
       { label: 'Contractor', name: contractorName, role: 'Service provider' },
@@ -102,7 +114,7 @@ export function generateProjectAgreementDraft(job: Job, bid?: Bid | null): Proje
     contractSections: [
       {
         title: 'Project Scope',
-        body: `The contractor will provide ${formatTradeType(job.tradeType)} services for ${job.title} at ${location}. The current scope is based on the posted project description: ${job.description}`,
+        body: `The contractor will provide ${tradeType} services for ${input.title} at ${input.location}. The current scope is based on the posted project description: ${input.scopeDescription}`,
       },
       {
         title: 'Contract Price',
@@ -127,12 +139,17 @@ export function generateProjectAgreementDraft(job: Job, bid?: Bid | null): Proje
       'Payment release should remain tied to documented milestone completion and review.',
     ],
     contractorSummary: [
-      `You are preparing to perform the posted ${formatTradeType(job.tradeType)} scope for ${formatCurrency(paymentAmount)}.`,
+      `You are preparing to perform the posted ${tradeType} scope for ${formatCurrency(paymentAmount)}.`,
       'Confirm required evidence, materials responsibility, site access, permits, and change order terms.',
       'Do not begin extra work unless both parties approve a written change order.',
     ],
-    riskFlags: getRiskFlags(job, bid),
+    riskFlags: getRiskFlags(input),
+    readinessItems: input.readinessItems,
   };
 }
 
-export type { AgreementRiskFlag, ProjectAgreementDraft };
+export function generateProjectAgreementDraft(job: Job, bid?: Bid | null): ProjectAgreementDraft {
+  return generateProjectAgreementDraftFromInput(createProjectAgreementInput(job, bid));
+}
+
+export type { AgreementReadinessItem, AgreementRiskFlag, ProjectAgreementDraft };

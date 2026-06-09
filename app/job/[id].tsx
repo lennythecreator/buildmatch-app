@@ -1,8 +1,10 @@
 import BidCard from "@/components/bid-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useBids } from "@/hooks/useBids";
+import { useBids, useCreateBid, useMyBid } from "@/hooks/useBids";
 import { useJob } from "@/hooks/useJobs";
+import { ApiError } from "@/lib/api/client";
+import { useAuthStore } from "@/store/auth";
 import {
   IconCalendar,
   IconCash,
@@ -13,7 +15,7 @@ import {
 } from "@tabler/icons-react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -43,21 +45,33 @@ function formatTradeType(tradeType: string) {
   return tradeType.replace(/_/g, " ");
 }
 
+const MIN_BID_MESSAGE_LENGTH = 50;
+
 export default function JobDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const jobId = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
+  const userRole = useAuthStore((state) => state.user?.role);
+  const isContractor = userRole === "CONTRACTOR";
+  const [bidAmount, setBidAmount] = React.useState("");
+  const [bidMessage, setBidMessage] = React.useState("");
 
   const { data: job, isLoading: isJobLoading, isError: hasJobError } = useJob(jobId ?? "");
   const {
     data: bidsResponse,
     isLoading: isBidsLoading,
     isError: hasBidsError,
-  } = useBids(jobId ?? "");
+  } = useBids(jobId ?? "", { enabled: !isContractor });
+  const { data: myBid, isLoading: isMyBidLoading } = useMyBid(jobId ?? "", { enabled: isContractor });
+  const createBid = useCreateBid();
 
   const bids = bidsResponse?.bids ?? [];
   const activeBids = bids.filter((bid) => bid.status !== "WITHDRAWN");
   const withdrawnBids = bids.filter((bid) => bid.status === "WITHDRAWN");
+  const canSubmitBid = isContractor && job?.status === "OPEN" && !myBid;
+  const trimmedBidMessage = bidMessage.trim();
+  const isBidMessageTooShort =
+    trimmedBidMessage.length > 0 && trimmedBidMessage.length < MIN_BID_MESSAGE_LENGTH;
 
   if (!jobId) {
     return (
@@ -96,6 +110,56 @@ export default function JobDetailScreen() {
     year: "numeric",
   });
 
+  function showBidError(error: unknown) {
+    if (error instanceof ApiError) {
+      const details = error.errors?.length ? `\n\n${error.errors.join("\n")}` : "";
+      Alert.alert("Could not submit bid", `${error.message}${details}`);
+      return;
+    }
+
+    Alert.alert("Could not submit bid", "Please check your bid amount and try again.");
+  }
+
+  function handleSubmitBid() {
+    if (!jobId) {
+      Alert.alert("Missing job", "We could not identify this job. Please go back and try again.");
+      return;
+    }
+
+    const amount = Number(bidAmount);
+
+    if (!amount || amount <= 0) {
+      Alert.alert("Enter a bid amount", "Your bid amount must be greater than 0.");
+      return;
+    }
+
+    if (trimmedBidMessage.length < MIN_BID_MESSAGE_LENGTH) {
+      Alert.alert(
+        "Add more proposal detail",
+        `Your bid message must be at least ${MIN_BID_MESSAGE_LENGTH} characters so the developer understands your scope, timeline, or experience.`
+      );
+      return;
+    }
+
+    createBid.mutate(
+      {
+        jobId,
+        input: {
+          amount,
+          message: trimmedBidMessage,
+        },
+      },
+      {
+        onSuccess: () => {
+          setBidAmount("");
+          setBidMessage("");
+          Alert.alert("Bid submitted", "Your proposal was sent to the developer.");
+        },
+        onError: showBidError,
+      }
+    );
+  }
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
@@ -110,6 +174,16 @@ export default function JobDetailScreen() {
           headerBackTitle: "",
           headerShadowVisible: false,
           headerStyle: { backgroundColor: '#f8fafc' },
+          headerLeft: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go to dashboard"
+              className="-ml-2 px-2 py-2"
+              onPress={() => router.replace("/(tabs)/dashboard")}
+            >
+              <Text className="text-base font-semibold text-accent">Dashboard</Text>
+            </Pressable>
+          ),
           headerRight: () => (
             <Pressable className="-mr-2 p-2">
               <IconDotsVertical size={24} color="#0f172a" />
@@ -168,7 +242,81 @@ export default function JobDetailScreen() {
         </Text>
       </View>
 
+      {isContractor ? (
+        <View className="gap-4 rounded-3xl bg-white p-6 shadow-sm shadow-slate-200/50">
+          <Text selectable className="text-2xl font-extrabold text-slate-900">
+            Your Bid
+          </Text>
+          {isMyBidLoading ? (
+            <View className="items-center justify-center py-4">
+              <ActivityIndicator />
+              <Text selectable className="mt-3 text-sm text-slate-500">
+                Checking your bid status...
+              </Text>
+            </View>
+          ) : myBid ? (
+            <BidCard bid={myBid} viewAs="contractor" />
+          ) : canSubmitBid ? (
+            <View className="gap-4">
+              <View className="gap-2">
+                <Text className="text-sm font-semibold text-slate-700">Bid Amount</Text>
+                <TextInput
+                  value={bidAmount}
+                  onChangeText={setBidAmount}
+                  keyboardType="numeric"
+                  placeholder="25000"
+                  placeholderTextColor="#94a3b8"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
+                />
+              </View>
+              <View className="gap-2">
+                <View className="flex-row items-center justify-between gap-3">
+                  <Text className="text-sm font-semibold text-slate-700">Message</Text>
+                  <Text
+                    className={`text-xs font-medium ${
+                      isBidMessageTooShort ? "text-danger" : "text-slate-500"
+                    }`}
+                  >
+                    {Math.min(trimmedBidMessage.length, MIN_BID_MESSAGE_LENGTH)}/
+                    {MIN_BID_MESSAGE_LENGTH} min
+                  </Text>
+                </View>
+                <TextInput
+                  value={bidMessage}
+                  onChangeText={setBidMessage}
+                  multiline
+                  placeholder="Share your timeline, approach, or relevant experience."
+                  placeholderTextColor="#94a3b8"
+                  className="min-h-[96px] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900"
+                  style={{ textAlignVertical: "top" }}
+                />
+                <Text
+                  selectable
+                  className={`text-xs leading-5 ${
+                    isBidMessageTooShort ? "text-danger" : "text-slate-500"
+                  }`}
+                >
+                  Proposal messages must be at least {MIN_BID_MESSAGE_LENGTH} characters.
+                </Text>
+              </View>
+              <Button
+                variant="primary"
+                isLoading={createBid.isPending}
+                onPress={handleSubmitBid}
+              >
+                Submit bid
+              </Button>
+            </View>
+          ) : (
+            <Text selectable className="text-sm leading-6 text-slate-500">
+              Bidding is only available while this job is open.
+            </Text>
+          )}
+        </View>
+      ) : null}
+
       {/* Bids Section */}
+      {!isContractor ? (
       <View className="mt-4 gap-6">
         <View className="flex-row items-center justify-between gap-3">
           <Text selectable className="text-[28px] font-extrabold text-slate-900">
@@ -260,6 +408,7 @@ export default function JobDetailScreen() {
           </View>
         )}
       </View>
+      ) : null}
 
       {/* Details Card */}
       <View className="mt-4 gap-8 rounded-3xl bg-white p-8 shadow-sm shadow-slate-200/50">
