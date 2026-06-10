@@ -2,7 +2,7 @@ import BidCard from "@/components/bid-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useBids, useCreateBid, useMyBid } from "@/hooks/useBids";
-import { useJob } from "@/hooks/useJobs";
+import { useCancelJob, useJob } from "@/hooks/useJobs";
 import { ApiError } from "@/lib/api/client";
 import { useAuthStore } from "@/store/auth";
 import {
@@ -11,12 +11,14 @@ import {
   IconDotsVertical,
   IconFileText,
   IconHistory,
-  IconMapPin
+  IconMapPin,
+  IconPencil,
+  IconTrash
 } from "@tabler/icons-react-native";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -53,9 +55,12 @@ export default function JobDetailScreen() {
   const jobId = Array.isArray(params.id) ? params.id[0] : params.id;
   const router = useRouter();
   const userRole = useAuthStore((state) => state.user?.role);
+  const userId = useAuthStore((state) => state.user?.id);
   const isContractor = userRole === "CONTRACTOR";
   const [bidAmount, setBidAmount] = React.useState("");
   const [bidMessage, setBidMessage] = React.useState("");
+  const [menuVisible, setMenuVisible] = React.useState(false);
+  const cancelJob = useCancelJob();
 
   const { data: job, isLoading: isJobLoading, isError: hasJobError } = useJob(jobId ?? "");
   const {
@@ -76,13 +81,13 @@ export default function JobDetailScreen() {
 
   React.useEffect(() => {
     if (job) {
-      console.log("[job detail] photos", {
-        jobId: job.id,
-        photos: job.photos,
-        photoCount: Array.isArray(job.photos) ? job.photos.length : "not-an-array",
+      console.log("[job detail] ownership", {
+        investorId: job.investorId,
+        investorNestedId: job.investor?.id,
+        currentUserId: userId,
       });
     }
-  }, [job]);
+  }, [job, userId]);
 
   if (!jobId) {
     return (
@@ -120,6 +125,42 @@ export default function JobDetailScreen() {
     day: "numeric",
     year: "numeric",
   });
+
+  // The backend owns jobs via `investorId` (exposed as a scalar and a nested
+  // `investor` object); `postedById`/`postedBy` are legacy fallbacks.
+  const ownerId = job.investorId ?? job.investor?.id ?? job.postedById ?? job.postedBy?.id;
+  const isOwner = !!userId && ownerId === userId;
+
+  function handleEditJob() {
+    setMenuVisible(false);
+    router.push({ pathname: "/post-job-manual", params: { jobId } });
+  }
+
+  function handleDeleteJob() {
+    setMenuVisible(false);
+    Alert.alert(
+      "Delete this job?",
+      "This cancels the job and notifies anyone who has bid. This can't be undone.",
+      [
+        { text: "Keep job", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            if (!jobId) return;
+            cancelJob.mutate(jobId, {
+              onSuccess: () => router.replace("/(tabs)/dashboard"),
+              onError: (error) => {
+                const message =
+                  error instanceof ApiError ? error.message : "Please try again later.";
+                Alert.alert("Could not delete job", message);
+              },
+            });
+          },
+        },
+      ]
+    );
+  }
 
   function showBidError(error: unknown) {
     if (error instanceof ApiError) {
@@ -195,13 +236,54 @@ export default function JobDetailScreen() {
               <Text className="text-base font-semibold text-accent">Dashboard</Text>
             </Pressable>
           ),
-          headerRight: () => (
-            <Pressable className="-mr-2 p-2">
-              <IconDotsVertical size={24} color="#0f172a" />
-            </Pressable>
-          ),
+          headerRight: () =>
+            isOwner ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Job options"
+                className="-mr-2 p-2"
+                onPress={() => setMenuVisible(true)}
+              >
+                <IconDotsVertical size={24} color="#0f172a" />
+              </Pressable>
+            ) : null,
         }}
       />
+
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/40"
+          onPress={() => setMenuVisible(false)}
+        >
+          <View className="rounded-t-3xl bg-white pb-8 pt-2">
+            <View className="items-center py-2">
+              <View className="h-1.5 w-12 rounded-full bg-slate-200" />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              className="flex-row items-center gap-3 px-6 py-4 active:bg-slate-50"
+              onPress={handleEditJob}
+            >
+              <IconPencil size={22} color="#0f172a" />
+              <Text className="text-base font-semibold text-slate-900">Edit job</Text>
+            </Pressable>
+            <View className="mx-6 h-px bg-slate-100" />
+            <Pressable
+              accessibilityRole="button"
+              className="flex-row items-center gap-3 px-6 py-4 active:bg-red-50"
+              onPress={handleDeleteJob}
+            >
+              <IconTrash size={22} color="#dc2626" />
+              <Text className="text-base font-semibold text-danger">Delete job</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
 
       <View className="gap-4">
         {/* Badges & Meta */}

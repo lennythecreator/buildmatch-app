@@ -123,6 +123,10 @@ export interface Job {
   state: string;
   zipCode: string;
   status: JobStatus;
+  // The backend's owner column is `investorId`, exposed as a top-level scalar and
+  // as a nested `investor` object. `postedById`/`postedBy` are kept for legacy callers.
+  investorId?: string;
+  investor?: Pick<User, 'id' | 'firstName' | 'lastName'>;
   postedById: string;
   awardedContractorId?: string;
   photos?: string[];

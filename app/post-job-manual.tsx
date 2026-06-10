@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { useCreateJob } from "@/hooks/useJobs";
+import { useCreateJob, useJob, useUpdateJob } from "@/hooks/useJobs";
 import { ApiError } from "@/lib/api/client";
 import { JobTradeType } from "@/lib/api/types";
 import { US_STATES } from "@/lib/constants";
 import { useAuthStore } from "@/store/auth";
-import { Stack, useRouter } from "expo-router";
-import { useState } from "react";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { uploadFiles } from "@/lib/upload";
 import { Image } from "expo-image";
@@ -36,14 +36,20 @@ const MAX_JOB_DESCRIPTION_LENGTH = 2000;
 
 export default function PostJobManual() {
     const router = useRouter();
+    const params = useLocalSearchParams<{ jobId?: string | string[] }>();
+    const jobId = Array.isArray(params.jobId) ? params.jobId[0] : params.jobId;
+    const isEditing = !!jobId;
     const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
     const { mutateAsync: createJob, isPending: isCreatingJob } = useCreateJob();
+    const { mutateAsync: updateJob, isPending: isUpdatingJob } = useUpdateJob();
+    const { data: existingJob } = useJob(jobId ?? "");
     const userId = useAuthStore((state) => state.user?.id);
     const [photos, setPhotos] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
-    
-    const isPending = isCreatingJob || isUploading;
-    const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    const [didHydrate, setDidHydrate] = useState(false);
+
+    const isPending = isCreatingJob || isUpdatingJob || isUploading;
+    const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
         defaultValues: {
             title: "",
             tradeType: undefined,
@@ -55,6 +61,24 @@ export default function PostJobManual() {
             zipCode: ""
         }
     });
+
+    // In edit mode, prefill the form once the existing job loads.
+    useEffect(() => {
+        if (existingJob && !didHydrate) {
+            reset({
+                title: existingJob.title,
+                tradeType: existingJob.tradeType,
+                description: existingJob.description,
+                budgetMin: String(existingJob.budgetMin),
+                budgetMax: String(existingJob.budgetMax),
+                city: existingJob.city,
+                state: existingJob.state,
+                zipCode: existingJob.zipCode,
+            });
+            setPhotos(existingJob.photos ?? []);
+            setDidHydrate(true);
+        }
+    }, [existingJob, didHydrate, reset]);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -72,46 +96,60 @@ export default function PostJobManual() {
         setPhotos(prev => prev.filter((_, i) => i !== index));
     };
 
+    const actionVerb = isEditing ? "save" : "create";
+
     function showSubmitError(error: unknown) {
+        const title = `Could not ${actionVerb} job`;
         if (error instanceof ApiError) {
             const details = error.errors?.length ? `\n\n${error.errors.join("\n")}` : "";
-            Alert.alert("Could not create job", `${error.message}${details}`);
+            Alert.alert(title, `${error.message}${details}`);
             return;
         }
 
         if (error instanceof Error) {
-            Alert.alert("Could not create job", error.message);
+            Alert.alert(title, error.message);
             return;
         }
 
-        Alert.alert("Could not create job", "An unknown error occurred while creating the job.");
+        Alert.alert(title, `An unknown error occurred while trying to ${actionVerb} the job.`);
     }
 
     const onSubmit = async (data: FormValues) => {
-        if (photos.length > 0 && !userId) {
+        // Photos already saved on the job are remote URLs; newly picked ones are
+        // local file URIs that still need uploading. Only upload the new ones.
+        const localPhotos = photos.filter((uri) => !/^https?:\/\//i.test(uri));
+        if (localPhotos.length > 0 && !userId) {
             alert("Please sign in again before uploading photos.");
             return;
         }
         setIsUploading(true);
         try {
-            const uploadedUrls: string[] = [];
+            const photoUrls = photos.filter((uri) => /^https?:\/\//i.test(uri));
 
-            if (photos.length > 0 && userId) {
-                const results = await uploadFiles("job-photos", userId, photos);
-                uploadedUrls.push(...results.map((r) => r.publicUrl));
+            if (localPhotos.length > 0 && userId) {
+                const results = await uploadFiles("job-photos", userId, localPhotos);
+                photoUrls.push(...results.map((r) => r.publicUrl));
             }
 
-            console.log("[post-job] creating job with photos", uploadedUrls);
+            console.log(`[post-job] ${actionVerb} job with photos`, photoUrls);
 
-            await createJob({
+            const payload = {
                 ...data,
                 budgetMin: Number(data.budgetMin),
                 budgetMax: Number(data.budgetMax),
-                ...(uploadedUrls.length > 0 ? { photos: uploadedUrls } : {})
-            });
-            router.push("/(tabs)/jobs");
+                // On edit, always send photos so removals persist; on create, omit when empty.
+                ...(isEditing || photoUrls.length > 0 ? { photos: photoUrls } : {}),
+            };
+
+            if (isEditing && jobId) {
+                await updateJob({ id: jobId, input: payload });
+                router.back();
+            } else {
+                await createJob(payload);
+                router.push("/(tabs)/jobs");
+            }
         } catch (error) {
-            console.error("Failed to upload photos or create job", error);
+            console.error(`Failed to ${actionVerb} job`, error);
             showSubmitError(error);
         } finally {
             setIsUploading(false);
@@ -120,7 +158,7 @@ export default function PostJobManual() {
 
     return (
         <ScrollView contentInsetAdjustmentBehavior="automatic" className="flex-1 bg-gray-50">
-            <Stack.Screen options={{ title: "Post Job (Manual)", headerBackTitle: "Back" }} />
+            <Stack.Screen options={{ title: isEditing ? "Edit Job" : "Post Job (Manual)", headerBackTitle: "Back" }} />
             
             <View className="p-4 gap-6 pb-12">
                 {/* 1. Job Details Card */}
@@ -465,7 +503,9 @@ export default function PostJobManual() {
                     {isPending ? (
                         <ActivityIndicator color="white" />
                     ) : (
-                        <Text className="text-white font-bold text-center text-base">Post Job</Text>
+                        <Text className="text-white font-bold text-center text-base">
+                            {isEditing ? "Save Changes" : "Post Job"}
+                        </Text>
                     )}
                 </Button>
             </View>
