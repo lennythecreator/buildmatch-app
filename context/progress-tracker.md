@@ -30,7 +30,7 @@ change.
 - Messaging is wired to live API queries with polling-backed refresh.
 - Attachment sending is still UI-only because the current API contract does not define message uploads.
 - Contractor profile messaging now normalizes the investor job payload, waits for jobs to load, and creates a conversation from an available job before opening the thread.
-- Project agreement drafting is currently a local preview generated from existing job and accepted bid data; PDF generation, backend AI, and DocuSign are not connected yet.
+- Project agreement drafting now has local API routes for OpenRouter/Groq/Ollama/template draft generation and base64 PDF generation; DocuSign envelope creation is not connected yet.
 
 ## Completed This Round
 
@@ -56,6 +56,19 @@ change.
 - Added a project agreement review screen with shared contract draft sections, developer summary, contractor summary, risk flags, and a DocuSign placeholder action.
 - Added an Expo Router agreement route and role-aware bid loading so investors use accepted bid data and contractors use their own accepted bid.
 - Added project agreement entry points from awarded job details and the post-bid-acceptance success flow.
+- Added a local Ollama-backed agreement draft API route with deterministic template fallback for testing AI-assisted contract drafting without paid API usage.
+- Wired the project agreement `Prepare for DocuSign` action to request an AI/template draft before preparing the handoff artifact.
+- Added an agreement PDF API route that converts the structured draft into a base64 PDF payload for future DocuSign envelope creation.
+- Updated the project agreement screen to generate the PDF after drafting and show the prepared PDF filename and size.
+- Added local agreement API server support for reading `.env` and configured Ollama timeout/output limits so slow local models fall back within a predictable test window.
+- Added visible Ollama fallback reasons to the agreement preparation alert and tightened the local Qwen prompt/output budget for faster 30-second testing.
+- Added Groq as the primary hosted agreement draft provider through the server-side draft endpoint, with template fallback when `GROQ_API_KEY` is missing or Groq returns an error.
+- Added OpenRouter as the primary hosted agreement draft provider through the server-side draft endpoint, with Groq as the hosted backup and template as the final fallback.
+- Added a shared AI agreement response normalizer so OpenRouter, Groq, and Ollama drafts can recover from keyed objects, object summary items, and non-standard risk/section field names instead of falling back to the template.
+- Added generated agreement PDF preview actions: the success alert now offers `Preview Agreement`, and the PDF-ready card keeps a persistent preview button using the existing in-app browser.
+- Switched generated agreement PDF preview from an unsupported base64 data URL to a cached local PDF file opened with the native sharing/document preview flow.
+- Updated PDF preview to use Expo SDK 54's current `File` and `Paths.cache` API after the legacy `cacheDirectory` value was unavailable on device.
+- Updated PDF preview writing to decode base64 into raw bytes before calling `File.write`, matching the runtime API that accepts a single content argument.
 - Switched the dispute details screen and mediation thread shell from flex-based layout sizing to Tailwind height utilities.
 - Switched the disputes list screen sizing from flex-based layout to Tailwind height utilities and kept the bottom safe-area padding on the list content.
 - Expanded the dispute detail screen and mediation container to use the full viewport height so the content area no longer gets cut off at the bottom.
@@ -132,6 +145,19 @@ change.
 - `npm.cmd run type-check` no longer reports the previous `headerStatusBarHeight` navigation errors; it remains blocked by existing dispute test/normalization typing issues.
 - `npm.cmd run lint` passes with warnings only after adding the project agreement preview; remaining warnings are unrelated existing warnings in contractor profile, contractor job controls, job search controls, and messaging conversations.
 - `npm.cmd run type-check` is still blocked by pre-existing `headerStatusBarHeight` option errors and dispute test/normalization typing issues; the new agreement route typing issues were resolved.
+- Direct PDF generator smoke test passes: it returns `application/pdf`, a `.pdf` filename, non-empty byte length, and base64 beginning with the PDF signature.
+- `npm.cmd run lint` passes with warnings only after adding the agreement PDF generator and endpoint; remaining warnings are unrelated existing warnings in contractor profile, contractor job controls, job search controls, and messaging conversations.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues.
+- Ollama agreement drafting is currently configured for faster local testing with `qwen3:4b` and a 30-second timeout; stronger models can be selected with `OLLAMA_MODEL` in `.env` without app code changes.
+- Direct tiny Qwen 3 4B JSON test took about 23 seconds locally, so full AI drafts may still fall back under the 30-second test cap on this machine.
+- OpenRouter is currently the primary configured agreement provider via `AI_AGREEMENT_PROVIDER=openrouter`; it requires a server-side `OPENROUTER_API_KEY` in `.env`, with Groq retained as backup.
+- Groq no-key smoke test passes by returning an immediate template fallback with `fallbackReason: "GROQ_API_KEY is not set."`
+- `npm.cmd run lint` passes with existing warnings only after adding the Groq agreement provider.
+- `npm.cmd run type-check` remains blocked by existing dispute test/normalization typing issues.
+- `npm.cmd run lint` passes with existing warnings only after adding OpenRouter as the primary agreement provider with Groq backup.
+- AI response normalizer smoke test passes for keyed contract sections, object summary items, and object risk flags.
+- `npm.cmd run lint` passes with existing warnings only after hardening AI response normalization.
+- `npm.cmd run lint` passes with existing warnings only after fixing the generated PDF preview file write path.
 - `npm.cmd run test:disputes` passes after adding dispute detail response normalization coverage for evidence and mediation payload shapes.
 - `npm.cmd run lint` passes with warnings only; current warnings remain in `app/contractor/[id].tsx`, `app/job/[id].tsx`, `components/contractor-jobs-controls.tsx`, `components/job-search-controls.tsx`, and `components/messaging/conversations.tsx`.
 - `npm run test:disputes` passes for dispute filing job normalization and eligibility filtering.

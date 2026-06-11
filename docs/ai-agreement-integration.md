@@ -4,7 +4,7 @@ This document describes the intended backend handoff for the project agreement d
 
 ## Current Frontend State
 
-The app can build a local draft preview from existing job and accepted bid data. It does not persist contracts, call an AI model, generate PDFs, or create DocuSign envelopes.
+The app can build a draft preview from existing job and accepted bid data, call the local draft API route, use OpenRouter as the primary hosted AI provider when `OPENROUTER_API_KEY` is configured, use Groq as the hosted backup when `GROQ_API_KEY` is configured, fall back to the deterministic template when AI is unavailable, and generate a base64 PDF payload for the DocuSign handoff. It does not persist contracts or create DocuSign envelopes yet.
 
 ## Proposed Backend Flow
 

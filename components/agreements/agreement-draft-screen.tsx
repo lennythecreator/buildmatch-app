@@ -2,11 +2,20 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { ProjectAgreementDraft } from '@/lib/agreements/project-agreement-draft';
 import { IconAlertTriangle, IconCircleCheck, IconCircleDashed, IconFileText, IconInfoCircle, IconSignature } from '@tabler/icons-react-native';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+
+interface PreparedAgreementPdf {
+  fileName: string;
+  byteLength: number;
+}
 
 interface AgreementDraftScreenProps {
   draft: ProjectAgreementDraft;
   isReadyForSignature: boolean;
+  isPreparingForDocuSign?: boolean;
+  preparedPdf?: PreparedAgreementPdf | null;
+  onPrepareForDocuSign: () => void;
+  onPreviewAgreement?: () => void;
 }
 
 function getRiskColor(severity: string) {
@@ -18,13 +27,6 @@ function getRiskColor(severity: string) {
     default:
       return 'default';
   }
-}
-
-function showSignaturePlaceholder() {
-  Alert.alert(
-    'DocuSign not connected yet',
-    'This draft preview is ready for the next integration step: generating a PDF and sending it through DocuSign.'
-  );
 }
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -57,7 +59,20 @@ function SummaryList({ items }: { items: string[] }) {
   );
 }
 
-export function AgreementDraftScreen({ draft, isReadyForSignature }: AgreementDraftScreenProps) {
+function formatFileSize(byteLength: number) {
+  const kilobytes = byteLength / 1024;
+
+  return `${kilobytes.toFixed(kilobytes >= 10 ? 0 : 1)} KB`;
+}
+
+export function AgreementDraftScreen({
+  draft,
+  isReadyForSignature,
+  isPreparingForDocuSign = false,
+  preparedPdf,
+  onPrepareForDocuSign,
+  onPreviewAgreement,
+}: AgreementDraftScreenProps) {
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -181,17 +196,43 @@ export function AgreementDraftScreen({ draft, isReadyForSignature }: AgreementDr
         <View className="flex-row items-center gap-2">
           <IconInfoCircle size={20} color="#64748b" />
           <Text selectable className="flex-1 text-sm leading-5 text-foreground/60">
-            Next step is backend PDF generation and DocuSign envelope creation. This preview does not save a contract.
+            This generates a draft PDF for the DocuSign handoff. Envelope creation and signature tracking are not connected yet.
           </Text>
         </View>
+        {preparedPdf ? (
+          <View className="gap-3 rounded-2xl bg-background p-4">
+            <View className="flex-row items-center gap-3">
+              <IconCircleCheck size={20} color="#10b981" />
+              <View className="flex-1 gap-1">
+                <Text selectable className="text-base font-bold text-foreground">
+                  PDF ready
+                </Text>
+                <Text selectable className="text-sm text-foreground/60">
+                  {preparedPdf.fileName} - {formatFileSize(preparedPdf.byteLength)}
+                </Text>
+              </View>
+            </View>
+            {onPreviewAgreement ? (
+              <Button variant="secondary" onPress={onPreviewAgreement}>
+                Preview Agreement
+              </Button>
+            ) : null}
+          </View>
+        ) : null}
         <Button
           variant="primary"
-          disabled={!isReadyForSignature}
-          onPress={showSignaturePlaceholder}
+          disabled={!isReadyForSignature || isPreparingForDocuSign}
+          onPress={onPrepareForDocuSign}
         >
           <View className="flex-row items-center justify-center gap-2">
-            <IconSignature size={18} color="#ffffff" />
-            <Text className="font-semibold text-accent-foreground">Prepare for DocuSign</Text>
+            {isPreparingForDocuSign ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <IconSignature size={18} color="#ffffff" />
+            )}
+            <Text className="font-semibold text-accent-foreground">
+              {isPreparingForDocuSign ? 'Preparing PDF...' : 'Prepare for DocuSign'}
+            </Text>
           </View>
         </Button>
       </View>

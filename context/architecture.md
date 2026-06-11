@@ -13,6 +13,7 @@
 ## System Boundaries
 
 - `[app]` — [Holds the feature modules]
+- `[app/api]` — [Expo API routes used for local/server-side workflow steps such as AI agreement drafting and PDF handoff generation]
 - `[components]` — [Holds all the reuseable UI components for the project]
 - `[components/ui]` — [UI primitives e.g Cards, Buttons]
 - `[data]`  — [Mock data and constants go here]
@@ -44,4 +45,5 @@
 1. [Rule the codebase must never violate — e.g. Request
    handlers do not run long-lived background work]
 2. [Code must not be stale avoid stale functions that are not being used]
+3. Agreement PDF generation returns a handoff artifact only; DocuSign envelope creation and signed PDF storage must be added as separate backend lifecycle steps.
 
