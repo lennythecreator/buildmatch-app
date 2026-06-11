@@ -11,7 +11,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function toList(value: unknown) {
+function toList(value: unknown): unknown[] {
   if (Array.isArray(value)) {
     return value;
   }
@@ -23,7 +23,7 @@ function toList(value: unknown) {
   return [];
 }
 
-function textFromUnknown(value: unknown) {
+function textFromUnknown(value: unknown): string {
   if (typeof value === 'string') {
     return value.trim();
   }
@@ -39,7 +39,7 @@ function textFromUnknown(value: unknown) {
   const preferredKeys = ['body', 'description', 'text', 'content', 'summary', 'value', 'detail'];
 
   for (const key of preferredKeys) {
-    const text = textFromUnknown(value[key]);
+    const text: string = textFromUnknown(value[key]);
 
     if (text) {
       return text;
@@ -47,7 +47,7 @@ function textFromUnknown(value: unknown) {
   }
 
   return Object.values(value)
-    .map((item) => textFromUnknown(item))
+    .map((item): string => textFromUnknown(item))
     .filter(Boolean)
     .join(' ')
     .trim();

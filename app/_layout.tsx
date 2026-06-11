@@ -37,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="conversation/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="disputes" options={{ headerShown: false }} />
         <Stack.Screen name="agreements/[jobId]" options={{ title: 'Project Agreement' }} />
+        <Stack.Screen name="agreements/preview" options={{ title: 'Agreement Preview' }} />
       </Stack>
     </ApiQueryClientProvider>
   );

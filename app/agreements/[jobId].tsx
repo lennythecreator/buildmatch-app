@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button';
 import { useBids, useMyBid } from '@/hooks/useBids';
 import { useJob } from '@/hooks/useJobs';
 import { requestAgreementDraft, requestAgreementPdf, type AgreementPdfApiResponse } from '@/lib/agreements/agreement-draft-api';
-import { openAgreementPdfPreview } from '@/lib/agreements/agreement-pdf-preview';
+import { createAgreementPreview } from '@/lib/agreements/agreement-preview-store';
 import { createProjectAgreementInput } from '@/lib/agreements/project-agreement-input';
 import { generateProjectAgreementDraftFromInput, type ProjectAgreementDraft } from '@/lib/agreements/project-agreement-draft';
 import { useAuthStore } from '@/store/auth';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router, useLocalSearchParams, type Href } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Alert, Text, View } from 'react-native';
 
@@ -85,13 +85,14 @@ export default function AgreementDraftRoute() {
   const draft = generatedDraft ?? generateProjectAgreementDraftFromInput(agreementInput);
   const isReadyForSignature = Boolean(bid) && jobQuery.data.status === 'AWARDED';
 
-  async function handlePreviewAgreement(pdf: AgreementPdfApiResponse) {
-    try {
-      await openAgreementPdfPreview(pdf);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not open the generated agreement preview.';
-      Alert.alert('Could not preview agreement', message);
-    }
+  function handlePreviewAgreement(pdf: AgreementPdfApiResponse) {
+    const previewId = createAgreementPreview(pdf);
+    const previewRoute = {
+      pathname: '/agreements/preview',
+      params: { previewId },
+    } as unknown as Href;
+
+    router.push(previewRoute);
   }
 
   async function handlePrepareForDocuSign() {
@@ -118,7 +119,7 @@ export default function AgreementDraftRoute() {
           {
             text: 'Preview Agreement',
             onPress: () => {
-              void handlePreviewAgreement(pdfResponse);
+              handlePreviewAgreement(pdfResponse);
             },
           },
         ]
@@ -147,7 +148,7 @@ export default function AgreementDraftRoute() {
         preparedPdf={preparedPdf}
         onPrepareForDocuSign={handlePrepareForDocuSign}
         onPreviewAgreement={preparedPdf ? () => {
-          void handlePreviewAgreement(preparedPdf);
+          handlePreviewAgreement(preparedPdf);
         } : undefined}
       />
     </>

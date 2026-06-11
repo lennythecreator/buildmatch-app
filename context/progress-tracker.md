@@ -69,6 +69,8 @@ change.
 - Switched generated agreement PDF preview from an unsupported base64 data URL to a cached local PDF file opened with the native sharing/document preview flow.
 - Updated PDF preview to use Expo SDK 54's current `File` and `Paths.cache` API after the legacy `cacheDirectory` value was unavailable on device.
 - Updated PDF preview writing to decode base64 into raw bytes before calling `File.write`, matching the runtime API that accepts a single content argument.
+- Added an in-app agreement preview route using `react-native-webview` and PDF.js, with generated PDF base64 stored behind a short preview id instead of being passed through navigation params.
+- Added a `Continue to DocuSign` placeholder action on the in-app agreement preview screen for the next embedded-signing integration step.
 - Switched the dispute details screen and mediation thread shell from flex-based layout sizing to Tailwind height utilities.
 - Switched the disputes list screen sizing from flex-based layout to Tailwind height utilities and kept the bottom safe-area padding on the list content.
 - Expanded the dispute detail screen and mediation container to use the full viewport height so the content area no longer gets cut off at the bottom.
@@ -158,6 +160,8 @@ change.
 - AI response normalizer smoke test passes for keyed contract sections, object summary items, and object risk flags.
 - `npm.cmd run lint` passes with existing warnings only after hardening AI response normalization.
 - `npm.cmd run lint` passes with existing warnings only after fixing the generated PDF preview file write path.
+- `npm.cmd run lint` passes with existing warnings only after adding the WebView/PDF.js agreement preview route.
+- `npm.cmd run type-check` reaches only the existing dispute test/normalization typing issues after the agreement preview route fixes.
 - `npm.cmd run test:disputes` passes after adding dispute detail response normalization coverage for evidence and mediation payload shapes.
 - `npm.cmd run lint` passes with warnings only; current warnings remain in `app/contractor/[id].tsx`, `app/job/[id].tsx`, `components/contractor-jobs-controls.tsx`, `components/job-search-controls.tsx`, and `components/messaging/conversations.tsx`.
 - `npm run test:disputes` passes for dispute filing job normalization and eligibility filtering.
