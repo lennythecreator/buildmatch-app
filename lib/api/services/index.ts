@@ -1,5 +1,6 @@
 export * from './auth';
 export { contractorService, type UpdateContractorProfileInput } from './contractors';
+export * from './escrow';
 export * from './jobs';
 export * from './bids';
 export * from './messages';
@@ -8,6 +9,7 @@ export * from './draws';
 export * from './contracts';
 export * from './saved';
 export * from './estimator';
+export * from './feedback';
 export * from './billing';
 export * from './notifications';
 export * from './upload';

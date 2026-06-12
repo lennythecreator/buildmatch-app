@@ -488,3 +488,116 @@ export interface BugReport {
   status: string;
   createdAt: string;
 }
+
+// --- Feedback Screen types ---
+
+export type FeedbackSentiment = 'POSITIVE' | 'NEGATIVE';
+
+export interface FeedbackSubmission {
+  id: string;
+  userId: string;
+  sentiment: FeedbackSentiment;
+  comment: string;
+  createdAt: string;
+}
+
+export interface SubmitFeedbackRequest {
+  comment: string;
+  sentiment: FeedbackSentiment;
+}
+
+export interface FounderPresence {
+  founders: { name: string; avatarUrl?: string }[];
+  isOnline: boolean;
+  statusLine: string;
+}
+
+// --- Escrow types ---
+
+export type EscrowPaymentStatus =
+  | 'PENDING'
+  | 'FUNDED'
+  | 'IN_PROGRESS'
+  | 'FULLY_RELEASED'
+  | 'DISPUTED'
+  | 'REFUNDED';
+
+export type MilestoneStatus =
+  | 'PENDING'
+  | 'SUBMITTED'
+  | 'APPROVED'
+  | 'DISPUTED'
+  | 'RELEASED';
+
+export interface EscrowMilestone {
+  id: string;
+  escrowPaymentId: string;
+  title: string;
+  description?: string | null;
+  percentage: number;
+  amount: number;
+  order: number;
+  status: MilestoneStatus;
+  escrowComItemId?: string | null;
+  disputeReason?: string | null;
+  completionNotes?: string | null;
+  approvedAt?: string | null;
+  releasedAt?: string | null;
+  createdAt: string;
+}
+
+export interface EscrowPayment {
+  id: string;
+  jobId: string;
+  investorId: string;
+  contractorId: string;
+  totalAmount: number;
+  platformFeeAmount: number;
+  status: EscrowPaymentStatus;
+  escrowComTransactionId?: string | null;
+  escrowComRef?: string | null;
+  milestones: EscrowMilestone[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EscrowOnboardStatus {
+  hasAccount: boolean;
+  isVerified: boolean;
+}
+
+export interface FundJobMilestoneInput {
+  title: string;
+  description?: string;
+  percentage: number;
+}
+
+export interface FundJobInput {
+  milestones: FundJobMilestoneInput[];
+}
+
+export interface FundJobResponse {
+  paymentUrl: string;
+  escrowPayment: EscrowPayment;
+}
+
+export interface SubmitMilestoneInput {
+  completionNotes?: string;
+}
+
+export interface DisputeMilestoneInput {
+  reason: string;
+}
+
+export interface EscrowOnboardResponse {
+  escrowComEmail: string;
+  message: string;
+}
+
+export interface MilestoneActionResponse {
+  id: string;
+  status: MilestoneStatus;
+  completionNotes?: string;
+  approvedAt?: string;
+  disputeReason?: string;
+}
