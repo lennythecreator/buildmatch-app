@@ -23,7 +23,9 @@ export function useDisputeEligibleJobs(): UseDisputeEligibleJobsResult {
     }
 
     if (role === 'CONTRACTOR') {
-      return normalizeJobsResponse(contractorJobsQuery.data);
+      const bids = contractorJobsQuery.data;
+      const jobs = bids ? bids.map((b) => b.job).filter((j): j is Job => !!j) : [];
+      return normalizeJobsResponse(jobs);
     }
 
     return [];
@@ -31,13 +33,17 @@ export function useDisputeEligibleJobs(): UseDisputeEligibleJobsResult {
 
   const eligibleJobs = getEligibleJobsByRole(sourceJobs, role, userId);
 
+  const contractorJobs = contractorJobsQuery.data
+    ?.map((b) => b.job)
+    .filter((j): j is Job => !!j) ?? [];
+
   logDisputeDebug('useDisputeEligibleJobs', {
     userId,
     role,
     investorJobsCount: normalizeJobsResponse(investorJobsQuery.data).length,
     investorJobIds: normalizeJobsResponse(investorJobsQuery.data).map((job) => job.id),
-    contractorJobsCount: normalizeJobsResponse(contractorJobsQuery.data).length,
-    contractorJobIds: normalizeJobsResponse(contractorJobsQuery.data).map((job) => job.id),
+    contractorJobsCount: contractorJobs.length,
+    contractorJobIds: contractorJobs.map((job) => job.id),
     sourceJobsCount: sourceJobs.length,
     sourceJobIds: sourceJobs.map((job) => job.id),
     eligibleJobsCount: eligibleJobs.length,

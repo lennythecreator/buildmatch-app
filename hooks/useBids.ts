@@ -1,8 +1,7 @@
+import { QUERY_KEYS } from '@/lib/api/query-keys';
 import { bidService } from '@/lib/api/services';
 import type { Bid, BidListResponse, CreateBidInput } from '@/lib/api/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
-export const BID_QUERY_KEY = ['bids'] as const;
 
 interface BidQueryOptions {
   enabled?: boolean;
@@ -23,7 +22,7 @@ function normalizeBidListResponse(response: BidListResponse | Bid[]): BidListRes
 
 export function useBids(jobId: string, options?: BidQueryOptions) {
   return useQuery({
-    queryKey: [...BID_QUERY_KEY, 'job', jobId],
+    queryKey: QUERY_KEYS.BIDS_JOB(jobId),
     queryFn: async () => {
       if (__DEV__) {
         console.log('[bids] fetching bids', { jobId });
@@ -56,7 +55,7 @@ export function useBids(jobId: string, options?: BidQueryOptions) {
 
 export function useMyBid(jobId: string, options?: BidQueryOptions) {
   return useQuery({
-    queryKey: [...BID_QUERY_KEY, 'my-bid', jobId],
+    queryKey: QUERY_KEYS.BIDS_MY_BID(jobId),
     queryFn: () => bidService.getMyBid(jobId),
     enabled: (options?.enabled ?? true) && !!jobId,
   });
@@ -69,9 +68,9 @@ export function useCreateBid() {
     mutationFn: ({ jobId, input }: { jobId: string; input: CreateBidInput }) =>
       bidService.create(jobId, input),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...BID_QUERY_KEY, 'job', variables.jobId] });
-      queryClient.invalidateQueries({ queryKey: [...BID_QUERY_KEY, 'my-bid', variables.jobId] });
-      queryClient.invalidateQueries({ queryKey: ['jobs', 'my-bids'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIDS_JOB(variables.jobId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIDS_MY_BID(variables.jobId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS_MY_BIDS });
     },
   });
 }
@@ -83,9 +82,9 @@ export function useAcceptBid() {
     mutationFn: ({ jobId, bidId }: { jobId: string; bidId: string }) =>
       bidService.accept(jobId, bidId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...BID_QUERY_KEY, 'job', variables.jobId] });
-      queryClient.invalidateQueries({ queryKey: ['jobs', 'detail', variables.jobId] });
-      queryClient.invalidateQueries({ queryKey: ['jobs', 'my-jobs'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIDS_JOB(variables.jobId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS_DETAIL(variables.jobId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS_MY_JOBS });
     },
   });
 }
@@ -97,8 +96,8 @@ export function useWithdrawBid() {
     mutationFn: ({ jobId, bidId }: { jobId: string; bidId: string }) =>
       bidService.withdraw(jobId, bidId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...BID_QUERY_KEY, 'job', variables.jobId] });
-      queryClient.invalidateQueries({ queryKey: [...BID_QUERY_KEY, 'my-bid', variables.jobId] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIDS_JOB(variables.jobId) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIDS_MY_BID(variables.jobId) });
     },
   });
 }

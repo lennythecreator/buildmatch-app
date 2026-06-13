@@ -181,7 +181,11 @@ export interface Bid {
   createdAt: string;
   updatedAt: string;
   job?: Job;
-  contractor?: Pick<User, 'id' | 'firstName' | 'lastName' | 'avatarUrl'>;
+  contractor?: {
+    userId: string;
+    averageRating?: number;
+    user: Pick<User, 'id' | 'firstName' | 'lastName' | 'avatarUrl'>;
+  };
 }
 
 export interface BidListResponse {

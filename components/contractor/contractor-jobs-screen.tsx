@@ -2,7 +2,7 @@ import { CONTRACTOR_JOB_TABS, ContractorJobsControls, DEFAULT_CONTRACTOR_JOBS_FI
 import JobCard from '@/components/job/job-card';
 import { Pagination } from '@/components/ui/pagination';
 import { useMyBids } from '@/hooks/useJobs';
-import type { Job as ApiJob } from '@/lib/api/types';
+import type { Bid, Job as ApiJob } from '@/lib/api/types';
 import type { Job as LocalJob } from '@/types/job';
 import React from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
@@ -40,7 +40,18 @@ function mapApiJobToLocalJob(job: ApiJob): ContractorJob {
   };
 }
 
-function formatSearchableTradeType(tradeType: string) {
+function extractJobFromBidResponse(item: ApiJob | Bid): ApiJob | null {
+  if ('job' in item && item.job) {
+    return item.job;
+  }
+  if ('title' in item) {
+    return item as ApiJob;
+  }
+  return null;
+}
+
+function formatSearchableTradeType(tradeType: string | undefined | null) {
+  if (!tradeType) return '';
   return tradeType.replace(/_/g, ' ').toLowerCase();
 }
 
@@ -160,8 +171,13 @@ export default function ContractorJobsScreen() {
   const [isFiltersExpanded, setIsFiltersExpanded] = React.useState(false);
 
   const jobs = React.useMemo(() => {
-    const responseJobs = Array.isArray(response) ? response : response?.jobs ?? [];
-    return responseJobs.map(mapApiJobToLocalJob);
+    const items = Array.isArray(response)
+      ? response
+      : (response as { jobs?: ApiJob[] } | undefined)?.jobs ?? [];
+    return items
+      .map((item) => extractJobFromBidResponse(item as ApiJob & Bid))
+      .filter((job): job is ApiJob => job !== null)
+      .map(mapApiJobToLocalJob);
   }, [response]);
 
   const contractorJobs = React.useMemo(

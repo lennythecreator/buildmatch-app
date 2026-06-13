@@ -93,7 +93,7 @@ export function createProjectAgreementInput(job: Job, bid?: Bid | null): Project
       },
       contractor: {
         id: bid?.contractorId,
-        name: getUserName(bid?.contractor),
+        name: getUserName(bid?.contractor?.user),
         role: 'contractor',
       },
     },

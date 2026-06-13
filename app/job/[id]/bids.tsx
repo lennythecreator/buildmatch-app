@@ -320,7 +320,7 @@ export default function BidComparisonScreen() {
             <Text className="text-base font-semibold text-foreground">Selected bid</Text>
           </View>
           <Text selectable className="text-sm text-foreground/60">
-            {selectedBid.contractor?.firstName ?? "Contractor"} · {formatCurrency(selectedBid.amount)}
+            {selectedBid.contractor?.user?.firstName ?? "Contractor"} · {formatCurrency(selectedBid.amount)}
           </Text>
           <Button
             variant="primary"

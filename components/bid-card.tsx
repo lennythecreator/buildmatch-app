@@ -16,8 +16,12 @@ interface BidCardBid {
         tradeType?: string;
     };
     contractor?: {
-        firstName?: string;
-        lastName?: string;
+        userId: string;
+        averageRating?: number;
+        user: {
+            firstName?: string;
+            lastName?: string;
+        };
     };
 }
 
@@ -63,8 +67,8 @@ function formatBidDate(date: string | Date) {
 }
 
 function formatContractorName(bid: BidCardBid) {
-    const firstName = bid.contractor?.firstName;
-    const lastName = bid.contractor?.lastName;
+    const firstName = bid.contractor?.user?.firstName;
+    const lastName = bid.contractor?.user?.lastName;
     const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
     return fullName || "Contractor";

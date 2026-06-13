@@ -46,7 +46,7 @@ export function buildEscrowSummary(
   const milestones = [...(payment?.milestones ?? [])].sort((a, b) => a.order - b.order);
 
   return {
-    contractorName: joinName(bid.contractor?.firstName, bid.contractor?.lastName, 'Contractor'),
+    contractorName: joinName(bid.contractor?.user?.firstName, bid.contractor?.user?.lastName, 'Contractor'),
     investorName: options?.investorName?.trim() || 'Client',
     bidAmount,
     escrowFee,

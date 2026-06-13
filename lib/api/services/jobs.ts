@@ -1,5 +1,5 @@
 import { apiClient } from '../client';
-import type { Job, JobListResponse, CreateJobInput, JobFilters } from '../types';
+import type { Bid, Job, JobListResponse, CreateJobInput, JobFilters } from '../types';
 
 export const jobService = {
   list: (filters?: JobFilters) =>
@@ -29,5 +29,5 @@ export const jobService = {
     apiClient.get<JobListResponse>('/api/jobs/my-jobs'),
 
   getMyBids: () =>
-    apiClient.get<JobListResponse>('/api/jobs/my-bids'),
+    apiClient.get<Bid[]>('/api/jobs/my-bids'),
 };
