@@ -23,6 +23,7 @@ export function useJob(id: string) {
     queryKey: QUERY_KEYS.JOBS_DETAIL(id),
     queryFn: () => jobService.get(id),
     enabled: !!id,
+    refetchInterval: 10000,
   });
 }
 
@@ -34,6 +35,7 @@ export function useMyJobs(options?: UserJobsQueryOptions) {
     queryKey: QUERY_KEYS.JOBS_MY_JOBS,
     queryFn: () => jobService.getMyJobs(),
     enabled: (options?.enabled ?? true) && isAuthenticated && !isLoading,
+    refetchInterval: 10000,
   });
 }
 
@@ -45,6 +47,7 @@ export function useMyBids(options?: UserJobsQueryOptions) {
     queryKey: QUERY_KEYS.JOBS_MY_BIDS,
     queryFn: () => jobService.getMyBids(),
     enabled: (options?.enabled ?? true) && isAuthenticated && !isLoading,
+    refetchInterval: 10000,
   });
 }
 

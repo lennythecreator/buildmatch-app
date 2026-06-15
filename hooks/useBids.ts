@@ -50,6 +50,7 @@ export function useBids(jobId: string, options?: BidQueryOptions) {
       }
     },
     enabled: (options?.enabled ?? true) && !!jobId,
+    refetchInterval: 8000,
   });
 }
 
@@ -58,6 +59,7 @@ export function useMyBid(jobId: string, options?: BidQueryOptions) {
     queryKey: QUERY_KEYS.BIDS_MY_BID(jobId),
     queryFn: () => bidService.getMyBid(jobId),
     enabled: (options?.enabled ?? true) && !!jobId,
+    refetchInterval: 8000,
   });
 }
 
