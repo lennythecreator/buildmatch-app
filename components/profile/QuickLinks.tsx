@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { UserRoleType } from '@/lib/api/types';
-import { IconBriefcase, IconPencil, IconSearch, IconTool, IconShieldExclamation } from '@tabler/icons-react-native';
+import { IconBriefcase, IconPencil, IconSearch, IconTool, IconShieldExclamation, IconSend } from '@tabler/icons-react-native';
 import { useRouter } from 'expo-router';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -17,12 +17,14 @@ export function QuickLinks({ role }: QuickLinksProps) {
         { title: 'Edit Profile', icon: IconPencil, onPress: () => router.push('/edit-profile') },
         { title: 'Post a Job', icon: IconTool, onPress: () => router.push('/post-job') },
         { title: 'Find Contractors', icon: IconSearch },
+        { title: 'Send Feedback', icon: IconSend, onPress: () => router.push('/feedback') },
         { title: 'Resolution Center', icon: IconShieldExclamation, onPress: () => router.push('/disputes') },
       ]
     : [
         { title: 'Edit Profile', icon: IconPencil, onPress: () => router.push('/edit-profile') },
         { title: 'Find Jobs', icon: IconSearch },
         { title: 'My Bids', icon: IconBriefcase },
+        { title: 'Send Feedback', icon: IconSend, onPress: () => router.push('/feedback') },
         { title: 'Resolution Center', icon: IconShieldExclamation, onPress: () => router.push('/disputes') },
       ];
 

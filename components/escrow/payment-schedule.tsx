@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth';
 import { IconCheck } from '@tabler/icons-react-native';
 import { Text, View } from 'react-native';
 
-interface PaymentScheduleProps {
+interface DrawScheduleProps {
   milestones: EscrowMilestone[];
   jobId: string;
   onSubmitMilestone?: (milestone: EscrowMilestone) => void;
@@ -22,12 +22,12 @@ const STATUS_COLORS: Record<string, string> = {
   RELEASED: 'bg-secondary',
 };
 
-export function PaymentSchedule({
+export function DrawSchedule({
   milestones,
   onSubmitMilestone,
   onApproveMilestone,
   onDisputeMilestone,
-}: PaymentScheduleProps) {
+}: DrawScheduleProps) {
   const role = useAuthStore((state) => state.user?.role);
   const isContractor = role === 'CONTRACTOR';
   const isInvestor = role === 'INVESTOR';
@@ -36,11 +36,11 @@ export function PaymentSchedule({
     return (
       <View className="gap-6 rounded-2xl bg-surface p-6 shadow-sm">
         <Text selectable className="text-lg font-bold text-foreground">
-          Payment Schedule
+          Draw Schedule
         </Text>
         <View className="rounded-xl border border-dashed border-border bg-foreground/5 p-6">
           <Text className="text-sm leading-6 text-foreground/60">
-            No milestones defined yet. Fund the escrow to create a payment schedule.
+            No draw schedule defined yet. Fund the escrow to create a draw schedule.
           </Text>
         </View>
       </View>
@@ -50,7 +50,7 @@ export function PaymentSchedule({
   return (
     <View className="gap-6 rounded-2xl bg-surface p-6 shadow-sm">
       <Text selectable className="text-lg font-bold text-foreground">
-        Payment Schedule
+        Draw Schedule
       </Text>
 
       <View className="gap-3">

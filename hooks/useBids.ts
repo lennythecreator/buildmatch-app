@@ -81,8 +81,8 @@ export function useAcceptBid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ jobId, bidId }: { jobId: string; bidId: string }) =>
-      bidService.accept(jobId, bidId),
+    mutationFn: ({ jobId, bidId, paymentPreference }: { jobId: string; bidId: string; paymentPreference?: string }) =>
+      bidService.accept(jobId, bidId, paymentPreference),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIDS_JOB(variables.jobId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS_DETAIL(variables.jobId) });

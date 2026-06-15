@@ -38,6 +38,8 @@ change.
 
 ## Added This Session
 
+- Added `refetchInterval` (8-10s) to bid, job, and my-bids queries so demos show changes within seconds.
+- Created `context/feature-specs/14-Draw-Schedule-Preference.md` — renames "Payment Schedule" → "Draw Schedule" and adds a payment preference selector (Draw Schedule vs Pay on completion) at bid-acceptance time.
 - Implemented the full escrow API integration per `context/feature-specs/escrow-api-contract.md`: added `EscrowPayment`, `EscrowMilestone`, `EscrowOnboardStatus`, `FundJobInput`, and related types to `lib/api/types.ts`; created `lib/api/services/escrow.ts` with `escrowService` covering onboard, onboard status, fund-job, get-by-job, submit/approve/dispute milestone endpoints; registered the service in the services barrel export.
 - Replaced the `useFundEscrow` MVP stub in `hooks/useEscrow.ts` with six React Query hooks: `useEscrowOnboardStatus`, `useEscrowOnboard`, `useEscrowPayment`, `useFundEscrowFromJob`, `useSubmitMilestone`, `useApproveMilestone`, `useDisputeMilestone` — all wired to real API calls with query key invalidation.
 - Updated `lib/escrow/escrow-summary.ts` to use `EscrowMilestone`/`EscrowPayment` instead of `DrawMilestone`/`DrawSchedule`, added `getPaymentStatusLabel` and `getMilestoneStatusLabel` helpers, and exported `EscrowPaymentStatus` for UI consumption.
@@ -46,12 +48,20 @@ change.
 - Rewrote `components/escrow/escrow-protection-status.tsx` to handle all `EscrowPaymentStatus` values (PENDING, FUNDED, IN_PROGRESS, FULLY_RELEASED, DISPUTED, REFUNDED) with appropriate icons, colors, and messaging, plus approved/remaining amount breakdown.
 - Updated `components/escrow/escrow-hero.tsx` to display status-specific badges for each escrow payment status.
 - Updated `components/escrow/escrow-order-total.tsx` to accept `onboardStatus` prop and show "Set Up Escrow Account" CTA when the investor has not completed Escrow.com onboarding.
+- Implemented the `profile_completion_url` feature per `context/feature-specs/13-profile-completion-url.md`: added `EscrowOnboardInput` type to `lib/api/types.ts` with optional `profileCompletionUrl`; updated `escrowService.onboard()` in `lib/api/services/escrow.ts` to accept the input type; created `lib/escrow/profile-completion-url.ts` with `buildProfileCompletionUrl(jobId)` returning `buildmatchapp://escrow/{jobId}`; updated `useEscrowOnboard()` mutation in `hooks/useEscrow.ts` to accept an optional `jobId` and build the redirect URL; updated both `escrowOnboard.mutate()` callsites in `components/escrow/escrow-screen.tsx` to pass `jobId` and updated Alert messages to mention redirect.
 - Lint passes with no errors or warnings on all new/changed escrow files.
 - TypeScript type-check reports no errors in any escrow files (pre-existing dispute test typing issues remain unchanged).
 
 ## Next Up
 
 - Swap the REST polling seam for realtime subscriptions once the backend transport contract is finalized.
+- Implement the `profile_completion_url` feature per `context/feature-specs/13-profile-completion-url.md`:
+  - Add `EscrowOnboardInput` type to `lib/api/types.ts`
+  - Create `lib/escrow/profile-completion-url.ts` helper
+  - Update `escrowService.onboard()` to accept input
+  - Update `useEscrowOnboard()` hook to accept jobId and build redirect URL
+  - Update `escrow-screen.tsx` to pass jobId to onboard mutation
+  - Update Alert messaging to reflect redirect behavior
 
 ## Open Questions
 

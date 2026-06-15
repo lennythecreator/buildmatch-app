@@ -1,4 +1,4 @@
-import type { Bid, Job, User } from '@/lib/api/types';
+import type { Bid, Job, PaymentPreference, User } from '@/lib/api/types';
 import { createProjectAgreementInput, type AgreementReadinessItem, type ProjectAgreementInput } from './project-agreement-input';
 
 interface AgreementParty {
@@ -97,6 +97,9 @@ export function generateProjectAgreementDraftFromInput(input: ProjectAgreementIn
   const developerName = input.parties.developer.name;
   const contractorName = input.parties.contractor.name;
   const tradeType = formatTradeType(input.tradeType);
+  const paymentTermsText = input.paymentPreference === 'LUMPSUM'
+    ? 'The full contract amount will be released upon project completion and approval.'
+    : 'Payment will be released incrementally as milestones in the draw schedule are completed and approved.';
 
   return {
     title: `${input.title} Project Agreement`,
@@ -118,7 +121,7 @@ export function generateProjectAgreementDraftFromInput(input: ProjectAgreementIn
       },
       {
         title: 'Contract Price',
-        body: `The proposed contract price is ${formatCurrency(paymentAmount)}. Payment terms should be tied to approved milestones, draw requests, or escrow release conditions before signature.`,
+        body: `The proposed contract price is ${formatCurrency(paymentAmount)}. ${paymentTermsText}`,
       },
       {
         title: 'Change Orders',
@@ -148,8 +151,8 @@ export function generateProjectAgreementDraftFromInput(input: ProjectAgreementIn
   };
 }
 
-export function generateProjectAgreementDraft(job: Job, bid?: Bid | null): ProjectAgreementDraft {
-  return generateProjectAgreementDraftFromInput(createProjectAgreementInput(job, bid));
+export function generateProjectAgreementDraft(job: Job, bid?: Bid | null, paymentPreference?: PaymentPreference): ProjectAgreementDraft {
+  return generateProjectAgreementDraftFromInput(createProjectAgreementInput(job, bid, paymentPreference));
 }
 
 export type { AgreementReadinessItem, AgreementRiskFlag, ProjectAgreementDraft };

@@ -11,8 +11,8 @@ export const bidService = {
   create: (jobId: string, input: CreateBidInput) =>
     apiClient.post<Bid>(`/api/jobs/${jobId}/bids`, input),
 
-  accept: (jobId: string, bidId: string) =>
-    apiClient.put<Bid>(`/api/jobs/${jobId}/bids/${bidId}/accept`, {}),
+  accept: (jobId: string, bidId: string, paymentPreference?: string) =>
+    apiClient.put<Bid>(`/api/jobs/${jobId}/bids/${bidId}/accept`, paymentPreference ? { paymentPreference } : {}),
 
   withdraw: (jobId: string, bidId: string) =>
     apiClient.put<Bid>(`/api/jobs/${jobId}/bids/${bidId}/withdraw`, {}),

@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { useAcceptBid, useBids } from "@/hooks/useBids";
 import { useJob } from "@/hooks/useJobs";
 import { ApiError } from "@/lib/api/client";
-import type { Bid } from "@/lib/api/types";
+import type { Bid, PaymentPreference } from "@/lib/api/types";
 import { useAuthStore } from "@/store/auth";
-import { IconCash, IconCheck, IconFilter, IconSortDescending } from "@tabler/icons-react-native";
+import { IconCash, IconCheck, IconCircle, IconCircleCheck, IconFilter, IconSortDescending } from "@tabler/icons-react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, Modal, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 type SortMode = "recommended" | "lowest" | "highest" | "newest";
 
@@ -49,6 +49,9 @@ export default function BidComparisonScreen() {
   const isInvestor = user?.role === "INVESTOR";
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedBidId, setSelectedBidId] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [pendingAcceptBidId, setPendingAcceptBidId] = useState<string | null>(null);
+  const [selectedPreference, setSelectedPreference] = useState<PaymentPreference>('DRAW_SCHEDULE');
   const { data: job, isLoading: isJobLoading, isError: hasJobError, error: jobError } = useJob(jobId ?? "");
   const { data: bidsResponse, isLoading: isBidsLoading, isError: hasBidsError } = useBids(jobId ?? "");
   const acceptBid = useAcceptBid();
@@ -141,39 +144,123 @@ export default function BidComparisonScreen() {
   }
 
   const handleAcceptBid = (bidId: string) => {
-    Alert.alert(
-      "Accept this bid?",
-      "This will award the job to this contractor and move the project forward.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Accept",
-          onPress: () => {
-            acceptBid.mutate(
-              { jobId, bidId },
-              {
-                onSuccess: () => {
-                  Alert.alert("Bid accepted", "The job has been awarded.", [
-                    { text: "View job", onPress: () => router.replace({ pathname: "/job/[id]", params: { id: jobId } }) },
-                    {
-                      text: "Draft agreement",
-                      onPress: () =>
-                        router.replace(`/agreements/${jobId}?bidId=${bidId}` as never),
-                    },
-                  ]);
-                },
-                onError: () => {
-                  Alert.alert("Could not accept bid", "Please try again.");
-                },
-              }
-            );
-          },
+    setPendingAcceptBidId(bidId);
+    setSelectedPreference('DRAW_SCHEDULE');
+    setShowPaymentModal(true);
+  };
+
+  const handleConfirmAccept = () => {
+    const bidId = pendingAcceptBidId;
+    if (!bidId) return;
+    setShowPaymentModal(false);
+
+    acceptBid.mutate(
+      { jobId, bidId, paymentPreference: selectedPreference },
+      {
+        onSuccess: () => {
+          Alert.alert("Bid accepted", "The job has been awarded.", [
+            { text: "View job", onPress: () => router.replace({ pathname: "/job/[id]", params: { id: jobId } }) },
+            {
+              text: "Draft agreement",
+              onPress: () =>
+                router.replace(`/agreements/${jobId}?bidId=${bidId}&paymentPreference=${selectedPreference}` as never),
+            },
+          ]);
         },
-      ]
+        onError: () => {
+          Alert.alert("Could not accept bid", "Please try again.");
+        },
+      }
     );
   };
 
   return (
+    <>
+      <Modal
+        visible={showPaymentModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <TouchableOpacity
+          className="flex-1 justify-center bg-black/50 p-6"
+          activeOpacity={1}
+          onPress={() => setShowPaymentModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}} className="overflow-hidden rounded-3xl bg-surface">
+            <View className="gap-6 p-6">
+              <View className="gap-2">
+                <Text className="text-xl font-bold text-foreground">How would you like to pay?</Text>
+                <Text className="text-sm text-foreground/60">
+                  Choose how you want to release funds for this project.
+                </Text>
+              </View>
+
+              <View className="gap-3">
+                <TouchableOpacity
+                  className={`flex-row items-center gap-4 rounded-2xl border p-4 ${
+                    selectedPreference === 'DRAW_SCHEDULE'
+                      ? 'border-accent bg-accent/5'
+                      : 'border-border bg-transparent'
+                  }`}
+                  onPress={() => setSelectedPreference('DRAW_SCHEDULE')}
+                >
+                  {selectedPreference === 'DRAW_SCHEDULE' ? (
+                    <IconCircleCheck size={22} color="#00264d" />
+                  ) : (
+                    <IconCircle size={22} color="#94A3B8" />
+                  )}
+                  <View className="flex-1 gap-0.5">
+                    <Text className="text-base font-bold text-foreground">Draw Schedule</Text>
+                    <Text className="text-sm text-foreground/60">
+                      Pay in stages as work completes
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className={`flex-row items-center gap-4 rounded-2xl border p-4 ${
+                    selectedPreference === 'LUMPSUM'
+                      ? 'border-accent bg-accent/5'
+                      : 'border-border bg-transparent'
+                  }`}
+                  onPress={() => setSelectedPreference('LUMPSUM')}
+                >
+                  {selectedPreference === 'LUMPSUM' ? (
+                    <IconCircleCheck size={22} color="#00264d" />
+                  ) : (
+                    <IconCircle size={22} color="#94A3B8" />
+                  )}
+                  <View className="flex-1 gap-0.5">
+                    <Text className="text-base font-bold text-foreground">Pay on Completion</Text>
+                    <Text className="text-sm text-foreground/60">
+                      Release full amount when job is done
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              <View className="flex-row gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onPress={() => setShowPaymentModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onPress={handleConfirmAccept}
+                >
+                  Accept Bid
+                </Button>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
     <ScrollView
       className="flex-1 bg-background"
       contentInsetAdjustmentBehavior="automatic"
@@ -333,5 +420,6 @@ export default function BidComparisonScreen() {
         </View>
       ) : null}
     </ScrollView>
+    </>
   );
 }

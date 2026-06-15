@@ -1,14 +1,15 @@
+import { Button } from '@/components/ui/button';
 import { EscrowHero } from '@/components/escrow/escrow-hero';
 import { EscrowOrderTotal } from '@/components/escrow/escrow-order-total';
 import { EscrowProtectionStatus } from '@/components/escrow/escrow-protection-status';
 import { EscrowSummaryCard } from '@/components/escrow/escrow-summary-card';
 import { EscrowSupportCard } from '@/components/escrow/escrow-support-card';
-import { PaymentSchedule } from '@/components/escrow/payment-schedule';
+import { DrawSchedule } from '@/components/escrow/payment-schedule';
 import { useBids, useMyBid } from '@/hooks/useBids';
 import { useApproveMilestone, useDisputeMilestone, useEscrowOnboard, useEscrowOnboardStatus, useEscrowPayment, useFundEscrowFromJob, useSubmitMilestone } from '@/hooks/useEscrow';
 import { useJob } from '@/hooks/useJobs';
-import type { Bid, EscrowMilestone } from '@/lib/api/types';
-import { type EscrowPaymentStatus, buildEscrowSummary } from '@/lib/escrow/escrow-summary';
+import type { Bid, EscrowMilestone, PaymentPreference } from '@/lib/api/types';
+import { type EscrowPaymentStatus, buildEscrowSummary, formatEscrowCurrency } from '@/lib/escrow/escrow-summary';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -78,6 +79,7 @@ export function EscrowScreen({ jobId }: EscrowScreenProps) {
   }
 
   const job = jobQuery.data;
+  const paymentPreference: PaymentPreference = job.paymentPreference ?? 'DRAW_SCHEDULE';
   const ownerId = job.investorId ?? job.investor?.id ?? job.postedById;
   const isOwner = !!userId && ownerId === userId;
   const isAwardedContractor =
@@ -162,11 +164,11 @@ export function EscrowScreen({ jobId }: EscrowScreenProps) {
           {
             text: 'Set up account',
             onPress: async () => {
-              escrowOnboard.mutate(undefined, {
+              escrowOnboard.mutate(jobId, {
                 onSuccess: (result) => {
                   Alert.alert(
                     'Account created',
-                    `${result.message}\n\nAfter setting your password, return here to fund the job.`
+                    `${result.message}\n\nYou will be redirected back here once your account is set up.`
                   );
                 },
                 onError: () => {
@@ -209,13 +211,70 @@ export function EscrowScreen({ jobId }: EscrowScreenProps) {
     >
       <EscrowHero title={job.title} status={escrowStatus} photoUri={job.photos?.[0]} />
       <EscrowSummaryCard summary={summary} />
-      <PaymentSchedule
-        milestones={summary.milestones}
-        jobId={jobId}
-        onSubmitMilestone={isContractor && escrowPayment ? handleSubmitMilestone : undefined}
-        onApproveMilestone={isInvestor && escrowPayment ? handleApproveMilestone : undefined}
-        onDisputeMilestone={isInvestor && escrowPayment ? handleDisputeMilestone : undefined}
-      />
+
+      {isContractor && !onboardStatus?.hasAccount ? (
+        <View className="gap-4 rounded-3xl border border-warning/30 bg-warning/5 p-5">
+          <View className="gap-2">
+            <Text className="text-base font-bold text-foreground">
+              Set up your escrow account
+            </Text>
+            <Text className="text-sm text-foreground/60">
+              You need an Escrow.com account to receive payments when milestones are approved.
+              Set one up now so you can get paid.
+            </Text>
+          </View>
+          <Button
+            variant="primary"
+            onPress={() => {
+              escrowOnboard.mutate(jobId, {
+                onSuccess: (result) => {
+                  Alert.alert(
+                    'Account created',
+                    `${result.message}\n\nYou will be redirected back here once your account is set up.`
+                  );
+                },
+                onError: () => {
+                  Alert.alert('Setup failed', 'Could not create Escrow.com account. Please try again.');
+                },
+              });
+            }}
+            isLoading={escrowOnboard.isPending}
+          >
+            Set up account
+          </Button>
+        </View>
+      ) : null}
+
+      {paymentPreference === 'LUMPSUM' ? (
+        <View className="gap-6 rounded-2xl bg-surface p-6 shadow-sm">
+          <Text selectable className="text-lg font-bold text-foreground">
+            Payment
+          </Text>
+          <View className="rounded-xl border border-border bg-foreground/5 p-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <Text selectable className="text-base font-bold text-foreground">
+                  Project Completion — Full Payment
+                </Text>
+                <Text className="text-xs text-foreground/60">
+                  Full amount released upon completion and approval
+                </Text>
+              </View>
+              <Text selectable className="text-base font-bold text-foreground">
+                {formatEscrowCurrency(summary.bidAmount)}
+              </Text>
+            </View>
+          </View>
+        </View>
+      ) : (
+        <DrawSchedule
+          milestones={summary.milestones}
+          jobId={jobId}
+          onSubmitMilestone={isContractor && escrowPayment ? handleSubmitMilestone : undefined}
+          onApproveMilestone={isInvestor && escrowPayment ? handleApproveMilestone : undefined}
+          onDisputeMilestone={isInvestor && escrowPayment ? handleDisputeMilestone : undefined}
+        />
+      )}
 
       {isInvestor && !escrowPayment ? (
         <EscrowOrderTotal

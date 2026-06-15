@@ -110,6 +110,8 @@ export type JobTradeType =
   | 'DEMOLITION'
   | 'OTHER';
 
+export type PaymentPreference = 'DRAW_SCHEDULE' | 'LUMPSUM';
+
 export type JobStatus = 'OPEN' | 'AWARDED' | 'CANCELLED' | 'COMPLETED';
 
 export interface Job {
@@ -135,6 +137,7 @@ export interface Job {
   bidCount?: number;
   hasBid?: boolean;
   postedBy?: Pick<User, 'id' | 'firstName' | 'lastName'>;
+  paymentPreference?: PaymentPreference;
 }
 
 export interface JobListResponse {
@@ -591,6 +594,10 @@ export interface SubmitMilestoneInput {
 
 export interface DisputeMilestoneInput {
   reason: string;
+}
+
+export interface EscrowOnboardInput {
+  profileCompletionUrl?: string;
 }
 
 export interface EscrowOnboardResponse {

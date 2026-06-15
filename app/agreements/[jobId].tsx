@@ -2,6 +2,7 @@ import { AgreementDraftScreen } from '@/components/agreements/agreement-draft-sc
 import { Button } from '@/components/ui/button';
 import { useBids, useMyBid } from '@/hooks/useBids';
 import { useJob } from '@/hooks/useJobs';
+import type { PaymentPreference } from '@/lib/api/types';
 import { generateProjectAgreementDraft } from '@/lib/agreements/project-agreement-draft';
 import { useAuthStore } from '@/store/auth';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
@@ -9,9 +10,10 @@ import React from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 export default function AgreementDraftRoute() {
-  const params = useLocalSearchParams<{ jobId?: string | string[]; bidId?: string | string[] }>();
+  const params = useLocalSearchParams<{ jobId?: string | string[]; bidId?: string | string[]; paymentPreference?: string | string[] }>();
   const jobId = Array.isArray(params.jobId) ? params.jobId[0] : params.jobId;
   const selectedBidId = Array.isArray(params.bidId) ? params.bidId[0] : params.bidId;
+  const paymentPreferenceParam = Array.isArray(params.paymentPreference) ? params.paymentPreference[0] : params.paymentPreference;
   const userRole = useAuthStore((state) => state.user?.role);
   const isInvestor = userRole === 'INVESTOR';
 
@@ -62,7 +64,7 @@ export default function AgreementDraftRoute() {
     );
   }
 
-  const draft = generateProjectAgreementDraft(jobQuery.data, bid);
+  const draft = generateProjectAgreementDraft(jobQuery.data, bid, paymentPreferenceParam as PaymentPreference);
   const isReadyForSignature = Boolean(bid) && jobQuery.data.status === 'AWARDED';
 
   return (

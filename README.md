@@ -75,12 +75,8 @@ npm run web
 ## Available Scripts
 
 ```bash
-npm start
-npm run android
-npm run ios
-npm run web
-npm run lint
-npm run type-check
+npx expo start
+npx expo run
 ```
 
 ## Project Structure

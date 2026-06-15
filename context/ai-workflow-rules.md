@@ -60,3 +60,4 @@ changes:
 2. No invariant defined in `architecture.md` was violated
 3. `progress-tracker.md` reflects the completed work
 4. `npm run build` passes
+5. Commit to current branch after every major change With an appropriate commit message so the changes can be reverted easily.

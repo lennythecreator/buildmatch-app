@@ -1,9 +1,9 @@
 import React, { Component, ReactNode, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
-import { IconPlus } from '@tabler/icons-react-native';
+import { IconPlus, IconChevronLeft } from '@tabler/icons-react-native';
 import { DisputeTabs } from '@/components/disputes/dispute-tabs';
 import { DisputeCard } from '@/components/disputes/dispute-card';
 import { logDisputeDebug } from '@/lib/debug/dispute-debug';
@@ -139,16 +139,16 @@ export function DisputesListScreen() {
   return (
     <SafeAreaView className="h-full bg-background">
       <View className="px-4 py-4 flex-row justify-between items-center bg-surface border-b border-border">
-        <Text className="text-2xl font-bold text-foreground">Disputes</Text>
-        <View className="flex-row gap-2">
-          <Button onPress={() => router.push('/disputes/test-cards')} size="sm" variant="secondary">
-            <Text className="font-medium text-foreground">Test Cards</Text>
-          </Button>
-          <Button onPress={() => router.push('/disputes/new')} size="sm">
-            <IconPlus size={18} color="#ffffff" className="mr-1" />
-            <Text className="text-white font-medium">File Dispute</Text>
-          </Button>
+        <View className="flex-row items-center min-w-0 grow">
+          <TouchableOpacity onPress={() => router.back()} className="mr-3 p-1">
+            <IconChevronLeft size={24} color="#3b82f6" />
+          </TouchableOpacity>
+          <Text className="text-2xl font-bold text-foreground">Disputes</Text>
         </View>
+        <Button onPress={() => router.push('/disputes/new')} size="sm">
+          <IconPlus size={18} color="#ffffff" className="mr-1" />
+          <Text className="text-white font-medium">File Dispute</Text>
+        </Button>
       </View>
 
       <DisputeTabs 

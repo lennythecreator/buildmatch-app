@@ -1,4 +1,5 @@
 import { ApiQueryClientProvider } from '@/lib/query-client';
+import { SplashScreen as AnimatedSplash } from '@/components/splash/splash-screen';
 import { useAuthStore } from '@/store/auth';
 import {
   PlusJakartaSans_400Regular,
@@ -10,7 +11,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
@@ -31,12 +32,19 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
   });
+  const [animatedSplashDone, setAnimatedSplashDone] = useState(false);
 
+  // Hide the native splash once fonts are ready so the animated
+  // splash (rendered below as a React overlay) becomes visible.
   useEffect(() => {
     if (fontsLoaded || fontError) {
       void SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  const handleAnimatedSplashComplete = useCallback(() => {
+    setAnimatedSplashDone(true);
+  }, []);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -64,9 +72,14 @@ export default function RootLayout() {
         <Stack.Screen name="find-jobs" options={{ title: 'Find Jobs' }} />
         <Stack.Screen name="bids" options={{ title: 'My Bids' }} />
         <Stack.Screen name="conversation/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="disputes" options={{ headerShown: false }} />
+        <Stack.Screen name="disputes/index" options={{ headerShown: false }} />
+        <Stack.Screen name="disputes/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="agreements/[jobId]" options={{ title: 'Project Agreement' }} />
+        <Stack.Screen name="feedback/index" options={{ title: 'Feedback' }} />
       </Stack>
+      {!animatedSplashDone && (
+        <AnimatedSplash onComplete={handleAnimatedSplashComplete} />
+      )}
     </ApiQueryClientProvider>
   );
 }

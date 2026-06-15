@@ -13,8 +13,9 @@ import {
   useDisputeMessages,
   useWithdrawDispute
 } from '@/hooks/useDisputes';
-import { useAuthStore } from '@/store/auth';
+import { logDisputeDebug } from '@/lib/debug/dispute-debug';
 import { MediaPermissionError, pickImagesFromLibrary, uploadFile } from '@/lib/upload';
+import { useAuthStore } from '@/store/auth';
 import { IconChevronLeft } from '@tabler/icons-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -36,6 +37,27 @@ export default function DisputeDetails() {
   const { mutate: addMessage, isPending: isSendingMessage } = useAddDisputeMessage();
   const { mutate: addEvidence, isPending: isUploading } = useAddDisputeEvidence();
   const { mutate: withdrawDispute, isPending: isWithdrawing } = useWithdrawDispute();
+
+  logDisputeDebug('DisputeDetails.render', {
+    id,
+    activeSegment,
+    isLoadingDispute,
+    isLoadingEvidence,
+    isLoadingMessages,
+    hasDispute: !!dispute,
+    disputeType: dispute ? (Array.isArray(dispute) ? 'array' : typeof dispute) : null,
+    disputeKeys: dispute && typeof dispute === 'object' ? Object.keys(dispute) : [],
+    amountDisputedType: typeof dispute?.amountDisputed,
+    jobTitle: dispute?.jobTitle ?? null,
+    filedById: dispute?.filedById ?? null,
+    againstId: dispute?.againstId ?? null,
+    status: dispute?.status ?? null,
+    userId: user?.id ?? null,
+    evidenceType: Array.isArray(evidence) ? 'array' : typeof evidence,
+    evidenceCount: Array.isArray(evidence) ? evidence.length : undefined,
+    messagesType: Array.isArray(messages) ? 'array' : typeof messages,
+    messagesCount: Array.isArray(messages) ? messages.length : undefined,
+  });
 
   if (isLoadingDispute) {
     return (
@@ -120,7 +142,7 @@ export default function DisputeDetails() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="bg-background" style={{ flex: 1 }}>
       <View className="px-4 py-4 flex-row items-center border-b border-border bg-surface">
         <TouchableOpacity onPress={() => router.back()} className="mr-4 p-1">
           <IconChevronLeft size={24} color="#3b82f6" />
@@ -149,9 +171,9 @@ export default function DisputeDetails() {
       </View>
 
       <ScrollView
-        className="flex-1 bg-background"
-        contentInsetAdjustmentBehavior="automatic"
+        style={{ flex: 1, backgroundColor: '#fff' }}
         contentContainerStyle={{
+          flexGrow: 1,
           paddingHorizontal: 16,
           paddingTop: 16,
           paddingBottom: Math.max(insets.bottom + 48, 56),

@@ -1,5 +1,6 @@
 import { apiClient } from '../client';
 import type {
+  EscrowOnboardInput,
   EscrowOnboardStatus,
   EscrowPayment,
   FundJobInput,
@@ -11,8 +12,8 @@ import type {
 } from '../types';
 
 export const escrowService = {
-  onboard: () =>
-    apiClient.post<EscrowOnboardResponse>('/api/escrow/onboard', {}),
+  onboard: (input?: EscrowOnboardInput) =>
+    apiClient.post<EscrowOnboardResponse>('/api/escrow/onboard', input ?? {}),
 
   getOnboardStatus: () =>
     apiClient.get<EscrowOnboardStatus>('/api/escrow/onboard/status'),

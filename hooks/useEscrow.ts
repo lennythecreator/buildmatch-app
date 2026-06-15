@@ -1,5 +1,6 @@
 import { escrowService } from '@/lib/api/services';
-import type { DisputeMilestoneInput, FundJobInput, SubmitMilestoneInput } from '@/lib/api/types';
+import { buildProfileCompletionUrl } from '@/lib/escrow/profile-completion-url';
+import type { DisputeMilestoneInput, EscrowOnboardInput, FundJobInput, SubmitMilestoneInput } from '@/lib/api/types';
 import { useAuthStore } from '@/store/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -22,7 +23,12 @@ export function useEscrowOnboard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => escrowService.onboard(),
+    mutationFn: (jobId?: string) => {
+      const input: EscrowOnboardInput | undefined = jobId
+        ? { profileCompletionUrl: buildProfileCompletionUrl(jobId) }
+        : undefined;
+      return escrowService.onboard(input);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [...ESCROW_QUERY_KEY, 'onboard-status'] });
     },

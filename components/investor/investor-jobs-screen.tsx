@@ -5,7 +5,8 @@ import React from 'react';
 import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function formatSearchableTradeType(tradeType: string) {
+function formatSearchableTradeType(tradeType: string | undefined | null) {
+  if (!tradeType) return '';
   return tradeType.replace(/_/g, ' ').toLowerCase();
 }
 

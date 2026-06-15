@@ -1,6 +1,6 @@
 import type { AgreementTemplate } from '@/lib/agreements/agreement-templates';
 import { AGREEMENT_TEMPLATES } from '@/lib/agreements/agreement-templates';
-import type { Bid, Job, User } from '@/lib/api/types';
+import type { Bid, Job, PaymentPreference, User } from '@/lib/api/types';
 
 interface AgreementInputParty {
   id?: string;
@@ -24,6 +24,7 @@ interface ProjectAgreementInput {
   location: string;
   scopeDescription: string;
   contractAmount: number;
+  paymentPreference: PaymentPreference;
   parties: {
     developer: AgreementInputParty;
     contractor: AgreementInputParty;
@@ -75,7 +76,7 @@ function getReadinessItems(job: Job, bid?: Bid | null): AgreementReadinessItem[]
   ];
 }
 
-export function createProjectAgreementInput(job: Job, bid?: Bid | null): ProjectAgreementInput {
+export function createProjectAgreementInput(job: Job, bid?: Bid | null, paymentPreference?: PaymentPreference): ProjectAgreementInput {
   return {
     template: AGREEMENT_TEMPLATES.RENOVATION_TEMPLATE,
     jobId: job.id,
@@ -85,6 +86,7 @@ export function createProjectAgreementInput(job: Job, bid?: Bid | null): Project
     location: `${job.city}, ${job.state} ${job.zipCode}`.trim(),
     scopeDescription: job.description,
     contractAmount: getContractAmount(job, bid),
+    paymentPreference: paymentPreference ?? job.paymentPreference ?? 'DRAW_SCHEDULE',
     parties: {
       developer: {
         id: job.postedById,

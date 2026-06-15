@@ -13,6 +13,7 @@ import {
   IconHistory,
   IconMapPin,
   IconPencil,
+  IconShieldCheck,
   IconTrash
 } from "@tabler/icons-react-native";
 import { Image } from "expo-image";
@@ -315,16 +316,28 @@ export default function JobDetailScreen() {
         </Text>
 
         {job.status === "AWARDED" ? (
-          <Button
-            variant="primary"
-            className="mt-2"
-            onPress={() => router.push(`/agreements/${jobId}` as never)}
-          >
-            <View className="flex-row items-center justify-center gap-2">
-              <IconFileText size={18} color="#ffffff" />
-              <Text className="font-semibold text-accent-foreground">Project agreement</Text>
-            </View>
-          </Button>
+          <View className="mt-2 gap-3">
+            <Button
+              variant="primary"
+              onPress={() => router.push(`/agreements/${jobId}` as never)}
+            >
+              <View className="flex-row items-center justify-center gap-2">
+                <IconFileText size={18} color="#ffffff" />
+                <Text className="font-semibold text-accent-foreground">Project agreement</Text>
+              </View>
+            </Button>
+            <Button
+              variant="secondary"
+              onPress={() => router.push(`/escrow/${jobId}` as never)}
+            >
+              <View className="flex-row items-center justify-center gap-2">
+                <IconShieldCheck size={18} color="#00264d" />
+                <Text className="font-semibold text-foreground">
+                  {isContractor ? "View escrow" : "Fund escrow"}
+                </Text>
+              </View>
+            </Button>
+          </View>
         ) : null}
       </View>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput } from 'react-native';
+import { View, Text, TextInput } from 'react-native';
 import { Button } from '@/components/ui/button';
 import { IconSend } from '@tabler/icons-react-native';
 import type { DisputeMessage } from '@/lib/api/types';
@@ -22,10 +22,10 @@ export function MediationThread({ messages, onSendMessage, isLoading }: Mediatio
   };
 
   return (
-    <View className="mt-4 min-h-full rounded-xl border border-border bg-surface overflow-hidden" style={{ minHeight: 420 }}>
-      <ScrollView className="h-full p-4" contentContainerStyle={{ paddingBottom: 16 }}>
+    <View className="mt-4 rounded-xl border border-border bg-surface overflow-hidden" style={{ minHeight: 420 }}>
+      <View className="p-4" style={{ flexGrow: 1, minHeight: 360 }}>
         {messages.length === 0 ? (
-          <View className="min-h-full items-center justify-center py-8">
+          <View className="flex-1 items-center justify-center py-8">
             <Text className="text-sm text-muted-foreground">No messages yet. Start the conversation.</Text>
           </View>
         ) : (
@@ -48,7 +48,7 @@ export function MediationThread({ messages, onSendMessage, isLoading }: Mediatio
             );
           })
         )}
-      </ScrollView>
+      </View>
 
       <View className="flex-row items-center border-t border-border p-2 bg-surface">
         <TextInput
