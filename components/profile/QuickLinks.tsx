@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
-import { UserRoleType } from '@/lib/api/types';
-import { IconBriefcase, IconPencil, IconSearch, IconTool, IconShieldExclamation, IconSend } from '@tabler/icons-react-native';
-import { useRouter } from 'expo-router';
+import type { UserRoleType } from '@/lib/api/types';
+import { IconBriefcase, IconPencil, IconSearch, IconTool, IconShieldExclamation, IconSend, IconCreditCard } from '@tabler/icons-react-native';
+import { router } from 'expo-router';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 interface QuickLinksProps {
@@ -9,12 +9,12 @@ interface QuickLinksProps {
 }
 
 export function QuickLinks({ role }: QuickLinksProps) {
-  const router = useRouter();
   const isInvestor = role === 'INVESTOR';
 
   const links = isInvestor
     ? [
         { title: 'Edit Profile', icon: IconPencil, onPress: () => router.push('/edit-profile') },
+        { title: 'Payment Options', icon: IconCreditCard, onPress: () => router.push('/payment-options' as never) },
         { title: 'Post a Job', icon: IconTool, onPress: () => router.push('/post-job') },
         { title: 'Find Contractors', icon: IconSearch },
         { title: 'Send Feedback', icon: IconSend, onPress: () => router.push('/feedback') },
@@ -22,6 +22,7 @@ export function QuickLinks({ role }: QuickLinksProps) {
       ]
     : [
         { title: 'Edit Profile', icon: IconPencil, onPress: () => router.push('/edit-profile') },
+        { title: 'Payment Options', icon: IconCreditCard, onPress: () => router.push('/payment-options' as never) },
         { title: 'Find Jobs', icon: IconSearch },
         { title: 'My Bids', icon: IconBriefcase },
         { title: 'Send Feedback', icon: IconSend, onPress: () => router.push('/feedback') },
@@ -35,8 +36,8 @@ export function QuickLinks({ role }: QuickLinksProps) {
         {links.map((link, i) => {
           const Icon = link.icon;
           return (
-            <TouchableOpacity 
-              key={i} 
+            <TouchableOpacity
+              key={i}
               className="flex-row items-center justify-between rounded-xl bg-gray-50 p-3 border border-gray-100"
               onPress={link.onPress}
             >

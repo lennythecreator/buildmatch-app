@@ -1,5 +1,5 @@
-import { billingService } from '@/lib/api/services';
-import { useQuery } from '@tanstack/react-query';
+import { billingService, CreateBillingMethodInput } from '@/lib/api/services';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const BILLING_QUERY_KEY = ['billing-methods'] as const;
 
@@ -12,5 +12,17 @@ export function useBillingMethods(options?: BillingQueryOptions) {
     queryKey: BILLING_QUERY_KEY,
     queryFn: () => billingService.list(),
     enabled: options?.enabled ?? true,
+  });
+}
+
+export function useCreateBillingMethod() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateBillingMethodInput) =>
+      billingService.create(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEY });
+    },
   });
 }

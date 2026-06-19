@@ -38,7 +38,15 @@ change.
 
 ## Added This Session
 
-- Added `refetchInterval` (8-10s) to bid, job, and my-bids queries so demos show changes within seconds.
+- Implemented Billing Method feature per `context/feature-specs/15-Billing Method.md`:
+  - Expanded `BillingMethod` type in `lib/api/types.ts` with full fields (holderName, expMonth, expYear, addressLine1, addressLine2, city, state, zipCode, country).
+  - Added `useCreateBillingMethod` mutation hook to `hooks/useBilling.ts` that calls `POST /api/billing-methods` and invalidates the billing methods query on success.
+  - Exported `useCreateBillingMethod` from barrel `hooks/index.ts`.
+  - Created `components/billing/payment-details-modal.tsx` — animated bottom sheet for entering card details (cardholder name, card number, expiry, CVV, address) with format masking (`formatCardNumber`, `formatExpiry`), keyboard-responsive layout, and create-billing-method mutation wired to submit.
+  - Created `components/billing/payments-selector.tsx` — expandable dropdown that shows saved payment methods (only last 4 digits displayed) with a "Enroll New Asset" button that triggers the payment-details-modal. Each saved method shows brand, last4, and expiry. Default method is marked with a check icon.
+  - Created `app/payment-options.tsx` — full Payment Options screen reachable from the profile Quick Links, rendering the selector, recent transactions summary, and status/archive cards per the design reference.
+  - Added "Payment Options" quick link (with `IconCreditCard`) to `components/profile/QuickLinks.tsx` for both INVESTOR and CONTRACTOR roles, navigating to `/payment-options`.
+- **Backend dependency**: The `GET /api/escrow/:jobId/accept-terms` endpoint must be implemented on the backend. It should return `{ acceptUrl: string }` where `acceptUrl` is the Escrow.com party acceptance URL for the authenticated user (e.g., constructed as `https://www.escrow-sandbox.com/transactions/${transaction.id}/process` for the contractor).
 - Created `context/feature-specs/14-Draw-Schedule-Preference.md` — renames "Payment Schedule" → "Draw Schedule" and adds a payment preference selector (Draw Schedule vs Pay on completion) at bid-acceptance time.
 - Implemented the full escrow API integration per `context/feature-specs/escrow-api-contract.md`: added `EscrowPayment`, `EscrowMilestone`, `EscrowOnboardStatus`, `FundJobInput`, and related types to `lib/api/types.ts`; created `lib/api/services/escrow.ts` with `escrowService` covering onboard, onboard status, fund-job, get-by-job, submit/approve/dispute milestone endpoints; registered the service in the services barrel export.
 - Replaced the `useFundEscrow` MVP stub in `hooks/useEscrow.ts` with six React Query hooks: `useEscrowOnboardStatus`, `useEscrowOnboard`, `useEscrowPayment`, `useFundEscrowFromJob`, `useSubmitMilestone`, `useApproveMilestone`, `useDisputeMilestone` — all wired to real API calls with query key invalidation.
@@ -54,6 +62,7 @@ change.
 
 ## Next Up
 
+- Implement `GET /api/escrow/:jobId/accept-terms` on the backend — constructs the Escrow.com party URL for the current user (`/payment` for investor, `/process` or similar for contractor).
 - Swap the REST polling seam for realtime subscriptions once the backend transport contract is finalized.
 - Implement the `profile_completion_url` feature per `context/feature-specs/13-profile-completion-url.md`:
   - Add `EscrowOnboardInput` type to `lib/api/types.ts`
@@ -78,6 +87,7 @@ change.
 - Performance and dashboard widgets should reuse the same live contractor bid query to avoid diverging mock data paths.
 - Messaging uses the same REST query layer for now, with a dedicated conversation hook and polling refresh so the implementation can switch to realtime channels later without changing the screen components.
 - Escrow funding follows the Escrow.com redirect model: the mobile app never handles payment credentials directly but opens the Escrow.com payment URL in the system browser via `expo-web-browser`.
+- Escrow terms acceptance uses the same redirect model: both parties get a party-specific Escrow.com URL opened in the in-app browser. The investor's URL (`/payment`) is returned from `fundJob`. The contractor's URL is returned from a dedicated `GET /api/escrow/:jobId/accept-terms` endpoint.
 - Escrow milestone actions (submit/approve/dispute) use direct REST mutations with query invalidation for eventual consistency; polling is not implemented on the client since the user triggers refreshes by re-entering the escrow screen.
 
 ## Session Notes

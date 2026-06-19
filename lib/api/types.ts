@@ -463,7 +463,16 @@ export interface BillingMethod {
   type: 'CARD' | 'PAYPAL' | 'VENMO';
   last4?: string;
   brand?: string;
-  email?: string;
+  holderName?: string;
+  expMonth?: number;
+  expYear?: number;
+  accountEmail?: string;
+  country?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   isDefault: boolean;
   createdAt: string;
 }
@@ -594,6 +603,10 @@ export interface SubmitMilestoneInput {
 
 export interface DisputeMilestoneInput {
   reason: string;
+}
+
+export interface AcceptTermsResponse {
+  acceptUrl: string;
 }
 
 export interface EscrowOnboardInput {

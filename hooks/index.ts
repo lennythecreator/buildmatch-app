@@ -1,8 +1,8 @@
 export { useCurrentUser, useDeleteAvatar, useGoogleOAuth, useLogin, useLogout, useNotificationPreferences, useRegister, useUpdateAvatar, useUpdateNotificationPreferences, useUpdateProfile } from './useAuth';
-export { useBillingMethods } from './useBilling';
+export { useBillingMethods, useCreateBillingMethod } from './useBilling';
 export { useDisputeEligibleJobs } from './useDisputeEligibleJobs';
 export { useDrawSchedule } from './useDraws';
-export { useEscrowOnboard, useEscrowOnboardStatus, useEscrowPayment, useFundEscrowFromJob, useSubmitMilestone, useApproveMilestone, useDisputeMilestone } from './useEscrow';
+export { useAcceptEscrowTerms, useEscrowOnboard, useEscrowOnboardStatus, useEscrowPayment, useFundEscrowFromJob, useSubmitMilestone, useApproveMilestone, useDisputeMilestone } from './useEscrow';
 export { useAcceptBid, useBids, useCreateBid, useMyBid, useWithdrawBid } from './useBids';
 export { useContractor, useContractors, useMyContractorProfile, useUpdateContractorProfile } from './useContractors';
 export { useAddDisputeEvidence, useAddDisputeMessage, useCreateDispute, useDispute, useDisputeEvidence, useDisputeMessages, useDisputes, useDisputeSummary, useDisputeTabCounts, useWithdrawDispute } from './useDisputes';
