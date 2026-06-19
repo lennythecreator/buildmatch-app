@@ -1,5 +1,6 @@
 import { apiClient } from '../client';
 import type {
+  AcceptTermsResponse,
   EscrowOnboardInput,
   EscrowOnboardStatus,
   EscrowPayment,
@@ -20,6 +21,9 @@ export const escrowService = {
 
   fundJob: (jobId: string, input: FundJobInput) =>
     apiClient.post<FundJobResponse>(`/api/escrow/fund-job/${jobId}`, input),
+
+  acceptTerms: (jobId: string) =>
+    apiClient.get<AcceptTermsResponse>(`/api/escrow/${jobId}/accept-terms`),
 
   getByJob: (jobId: string) =>
     apiClient.get<EscrowPayment>(`/api/escrow/${jobId}`),

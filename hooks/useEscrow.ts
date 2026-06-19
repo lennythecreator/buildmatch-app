@@ -35,6 +35,12 @@ export function useEscrowOnboard() {
   });
 }
 
+export function useAcceptEscrowTerms() {
+  return useMutation({
+    mutationFn: (jobId: string) => escrowService.acceptTerms(jobId),
+  });
+}
+
 export function useEscrowPayment(jobId: string) {
   return useQuery({
     queryKey: [...ESCROW_QUERY_KEY, 'payment', jobId],

@@ -33,7 +33,7 @@
 ## Auth and Access Model
 
 - [How authentication works — e.g. Every user signs in
-  via Clerk]
+  via jwt]
 - [How ownership works — e.g. Every project has a single
   owner]
 - [How access control works — e.g. Only the owner or a

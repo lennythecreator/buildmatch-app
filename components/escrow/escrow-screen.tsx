@@ -6,7 +6,7 @@ import { EscrowSummaryCard } from '@/components/escrow/escrow-summary-card';
 import { EscrowSupportCard } from '@/components/escrow/escrow-support-card';
 import { DrawSchedule } from '@/components/escrow/payment-schedule';
 import { useBids, useMyBid } from '@/hooks/useBids';
-import { useApproveMilestone, useDisputeMilestone, useEscrowOnboard, useEscrowOnboardStatus, useEscrowPayment, useFundEscrowFromJob, useSubmitMilestone } from '@/hooks/useEscrow';
+import { useAcceptEscrowTerms, useApproveMilestone, useDisputeMilestone, useEscrowOnboard, useEscrowOnboardStatus, useEscrowPayment, useFundEscrowFromJob, useSubmitMilestone } from '@/hooks/useEscrow';
 import { useJob } from '@/hooks/useJobs';
 import type { Bid, EscrowMilestone, PaymentPreference } from '@/lib/api/types';
 import { type EscrowPaymentStatus, buildEscrowSummary, formatEscrowCurrency } from '@/lib/escrow/escrow-summary';
@@ -43,6 +43,7 @@ export function EscrowScreen({ jobId }: EscrowScreenProps) {
   const escrowPaymentQuery = useEscrowPayment(jobId);
   const onboardStatusQuery = useEscrowOnboardStatus();
   const escrowOnboard = useEscrowOnboard();
+  const acceptEscrowTerms = useAcceptEscrowTerms();
   const fundEscrow = useFundEscrowFromJob();
   const submitMilestone = useSubmitMilestone();
   const approveMilestone = useApproveMilestone();
@@ -154,6 +155,18 @@ export function EscrowScreen({ jobId }: EscrowScreenProps) {
     ]);
   }
 
+  async function handleAcceptTerms() {
+    try {
+      const result = await acceptEscrowTerms.mutateAsync(jobId);
+      if (result.acceptUrl) {
+        await WebBrowser.openBrowserAsync(result.acceptUrl);
+        acceptEscrowTerms.reset();
+      }
+    } catch {
+      Alert.alert('Could not load terms', 'Unable to retrieve the Escrow.com acceptance page. Please try again.');
+    }
+  }
+
   async function handleFund() {
     if (!onboardStatus?.hasAccount) {
       Alert.alert(
@@ -242,6 +255,32 @@ export function EscrowScreen({ jobId }: EscrowScreenProps) {
           >
             Set up account
           </Button>
+        </View>
+      ) : null}
+
+      {isContractor && escrowPayment && escrowPayment.status === 'FUNDED' ? (
+        <View className="gap-4 rounded-3xl border border-accent/30 bg-accent/5 p-5">
+          <View className="gap-2">
+            <Text className="text-base font-bold text-foreground">
+              Review & Accept Escrow Terms
+            </Text>
+            <Text className="text-sm leading-5 text-foreground/60">
+              {summary.investorName} has funded the escrow. Review and accept the Escrow.com terms
+              to officially start the project.
+            </Text>
+          </View>
+          <Button
+            variant="primary"
+            isLoading={acceptEscrowTerms.isPending}
+            onPress={handleAcceptTerms}
+          >
+            Accept Terms
+          </Button>
+          {acceptEscrowTerms.isError ? (
+            <Text className="text-xs text-danger">
+              Could not load the acceptance page. Please try again.
+            </Text>
+          ) : null}
         </View>
       ) : null}
 
